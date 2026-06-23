@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon | Cross Wear</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Cross Wear is preparing a new home for premium, Canadian-made Christian apparel. Enter your preview login to continue.">
+    <link rel="canonical" href="https://jesuscrosswear.ca/">
+    <link rel="icon" type="image/png" href="images/Websitehalflogo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Cross Wear">
+    <meta property="og:title" content="Cross Wear — Premium Christian Apparel">
+    <meta property="og:description" content="Cross Wear is preparing a new home for premium, Canadian-made Christian apparel.">
+    <meta property="og:url" content="https://jesuscrosswear.ca/">
+    <meta property="og:image" content="https://jesuscrosswear.ca/images/Websitelogo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cross Wear — Premium Christian Apparel">
+    <meta name="twitter:description" content="Cross Wear is preparing a new home for premium, Canadian-made Christian apparel.">
+    <meta name="twitter:image" content="https://jesuscrosswear.ca/images/Websitelogo.png">
+    <link rel="preload" as="image" href="images/Signature~Jesus-mobile.png" media="(max-width: 760px)" fetchpriority="high">
+    <link rel="preload" as="image" href="images/Signature~Jesus.png" media="(min-width: 761px)" fetchpriority="high">
+</head>
+
+<body class="gate-page" data-gate-target="home.html">
+
+    <section class="coming-soon-gate" aria-labelledby="coming-soon-title" data-gate-panel>
+        <div class="coming-soon-intro">
+            <img src="images/Websitehalflogo.png" alt="Cross Wear Logo" class="coming-soon-logo">
+            <h1 id="coming-soon-title">Coming Soon</h1>
+        </div>
+        <div class="coming-soon-row">
+            <div class="coming-soon-shell">
+                <p class="coming-soon-kicker">Private Preview</p>
+                <p class="coming-soon-copy">Cross Wear is preparing the new site. Enter your preview login to continue.</p>
+                <form class="gate-form" data-gate-form action="home.html" method="post">
+                    <label>
+                        Login
+                        <span class="gate-field"><input type="text" name="login" autocomplete="username" required></span>
+                    </label>
+                    <label>
+                        Password
+                        <span class="gate-field"><input type="password" name="password" autocomplete="current-password" required></span>
+                    </label>
+                    <button class="gate-submit" type="submit">Enter Site</button>
+                    <p class="gate-message" aria-live="polite" data-gate-message></p>
+                </form>
+            </div>
+            <aside class="coming-soon-shell coming-soon-preview-shell" aria-label="Premium apparel preview">
+                <figure class="coming-soon-preview">
+                    <button class="coming-soon-preview-image" type="button" aria-label="Enlarge Signature Jesus apparel preview" aria-pressed="false">
+                        <picture>
+                            <source media="(max-width: 760px)" srcset="images/Signature~Jesus-mobile.png">
+                            <img src="images/Signature~Jesus.png" alt="Signature Jesus premium Christian apparel" width="1122" height="1130" decoding="async" fetchpriority="high">
+                        </picture>
+                    </button>
+                    <figcaption>Premium Christian Apparel</figcaption>
+                </figure>
+                <a class="gate-email" href="mailto:info@jesuscrosswear.ca" aria-label="Email info@jesuscrosswear.ca">Email Us</a>
+            </aside>
+        </div>
+    </section>
+
+    <script src="js/gate.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,808 @@
+const searchForm = document.querySelector('.search-bar');
+
+if (searchForm) {
+    const searchInput = document.querySelector('#site-search');
+    const searchMessage = document.querySelector('.search-message');
+
+    const searchableItems = [
+        { title: 'Home', url: 'index.html', keywords: ['home', 'logo', 'i am cross wear'] }
+    ];
+
+    searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const query = searchInput.value.trim().toLowerCase();
+
+        if (!query) {
+            searchMessage.textContent = 'Please enter something to search.';
+            searchInput.focus();
+            return;
+        }
+
+        const result = searchableItems.find((item) => {
+            const haystack = [item.title, ...item.keywords].join(' ').toLowerCase();
+            return haystack.includes(query);
+        });
+
+        if (result) {
+            window.location.href = result.url;
+            return;
+        }
+
+        searchMessage.textContent = `No results found for "${searchInput.value.trim()}".`;
+    });
+}
+
+const productCards = document.querySelectorAll('.product-card, .signature-product-card[data-product-name]');
+const signaturePreviewButtons = document.querySelectorAll('.signature-product-media');
+const cartButton = document.querySelector('.cart-button');
+const cartCount = document.querySelector('.cart-count');
+const cartModal = document.querySelector('#cart-modal');
+const cartTitle = document.querySelector('#cart-modal-title');
+const cartClose = document.querySelector('.cart-close');
+const cartItemsContainer = document.querySelector('.cart-items');
+const cartTotal = document.querySelector('.cart-total');
+const cartCheckout = document.querySelector('.cart-checkout');
+const cartClear = document.querySelector('.cart-clear');
+const cartModalNote = document.querySelector('.cart-modal-note');
+const imageViewerModal = document.querySelector('#image-viewer-modal');
+const imageViewerTitle = document.querySelector('#image-viewer-title');
+const imageViewerImage = document.querySelector('.image-viewer-image');
+const imageViewerClose = document.querySelector('.image-viewer-close');
+const unitPrice = 57.49;
+const defaultVariantStock = 10;
+const inventoryOverrides = {};
+const cartItems = [];
+const availabilityUpdaters = [];
+const productGalleries = new Map();
+let activeImageGallery = null;
+const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+let activeSignaturePreviewHold = null;
+
+const preloadImage = (src) => {
+    const image = new Image();
+    image.src = src;
+    image.decoding = 'async';
+    image.decode?.().catch(() => {});
+};
+
+const preloadImageAfterLoad = (src) => {
+    const preloadWhenIdle = () => {
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(() => preloadImage(src), { timeout: 3000 });
+            return;
+        }
+
+        window.setTimeout(() => preloadImage(src), 800);
+    };
+
+    if (document.readyState === 'complete') {
+        preloadWhenIdle();
+        return;
+    }
+
+    window.addEventListener('load', preloadWhenIdle, { once: true });
+};
+
+const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getCssNumber = (element, propertyName, fallback = 0) => {
+    const value = Number.parseFloat(window.getComputedStyle(element).getPropertyValue(propertyName));
+    return Number.isFinite(value) ? value : fallback;
+};
+
+const resetSignaturePreviewPan = (button) => {
+    button.style.setProperty('--signature-preview-pan-x', '0px');
+    button.style.setProperty('--signature-preview-pan-y', '0px');
+};
+
+const updateSignaturePreviewPan = (button, event, startPoint) => {
+    const previewScale = getCssNumber(button, '--signature-preview-scale', 1);
+    const previewWidth = getCssNumber(button, '--signature-preview-width', window.innerWidth);
+    const previewHeight = getCssNumber(button, '--signature-preview-height', window.innerHeight);
+    const visibleWidth = Math.min(window.innerWidth, previewWidth);
+    const visibleHeight = Math.min(window.innerHeight, previewHeight);
+    const maxPanX = Math.max(0, ((previewWidth * previewScale) - visibleWidth) / 2);
+    const maxPanY = Math.max(0, ((previewHeight * previewScale) - visibleHeight) / 2);
+    const panX = clampNumber(event.clientX - startPoint.x, -maxPanX, maxPanX);
+    const panY = clampNumber(event.clientY - startPoint.y, -maxPanY, maxPanY);
+
+    button.style.setProperty('--signature-preview-pan-x', `${panX}px`);
+    button.style.setProperty('--signature-preview-pan-y', `${panY}px`);
+};
+
+const updateSignaturePreviewPosition = (button) => {
+    const buttonRect = button.getBoundingClientRect();
+    const previewPadding = 15;
+    const computedStyle = window.getComputedStyle(button);
+    const fallbackRatio = Number.parseFloat(computedStyle.getPropertyValue('--signature-preview-ratio')) || 0.92;
+    const previewImage = button.querySelector('img');
+    const imageRatio = previewImage?.naturalWidth && previewImage?.naturalHeight ? previewImage.naturalWidth / previewImage.naturalHeight : fallbackRatio;
+    const maxPreviewWidth = Math.max(160, window.innerWidth - (previewPadding * 2));
+    const maxPreviewHeight = Math.max(160, Math.min(window.innerHeight * 0.95, window.innerHeight - (previewPadding * 2)));
+    const previewWidth = Math.min(maxPreviewHeight * imageRatio, maxPreviewWidth);
+    const previewHeight = previewWidth / imageRatio;
+    const minLeft = previewPadding + (previewWidth / 2);
+    const maxLeft = window.innerWidth - previewPadding - (previewWidth / 2);
+    const minTop = previewPadding + (previewHeight / 2);
+    const maxTop = window.innerHeight - previewPadding - (previewHeight / 2);
+    const unclampedLeft = buttonRect.left + (buttonRect.width / 2);
+    const unclampedTop = buttonRect.top + (buttonRect.height / 2);
+    const previewLeft = Math.min(Math.max(unclampedLeft, minLeft), maxLeft);
+    const previewTop = Math.min(Math.max(unclampedTop, minTop), maxTop);
+
+    button.style.setProperty('--signature-preview-left', `${previewLeft}px`);
+    button.style.setProperty('--signature-preview-top', `${previewTop}px`);
+    button.style.setProperty('--signature-preview-width', `${previewWidth}px`);
+    button.style.setProperty('--signature-preview-height', `${previewHeight}px`);
+};
+
+const setSignaturePreviewExpanded = (button, isExpanded) => {
+    if (isExpanded) {
+        updateSignaturePreviewPosition(button);
+    } else {
+        resetSignaturePreviewPan(button);
+    }
+
+    button.classList.toggle('is-enlarged', isExpanded);
+    button.setAttribute('aria-pressed', String(isExpanded));
+};
+
+const closeSignaturePreviews = () => {
+    signaturePreviewButtons.forEach((button) => setSignaturePreviewExpanded(button, false));
+};
+
+signaturePreviewButtons.forEach((button) => {
+    const previewImage = button.querySelector('img');
+    const selectedPreviewSrc = previewImage?.currentSrc || previewImage?.src;
+    const fullPreviewSrc = previewImage?.getAttribute('src') ? new URL(previewImage.getAttribute('src'), document.baseURI).href : '';
+
+    if (selectedPreviewSrc) {
+        preloadImage(selectedPreviewSrc);
+    }
+
+    if (fullPreviewSrc && fullPreviewSrc !== selectedPreviewSrc) {
+        preloadImageAfterLoad(fullPreviewSrc);
+    }
+});
+
+signaturePreviewButtons.forEach((button) => {
+    button.addEventListener('pointerenter', () => {
+        if (canHoverPreview) {
+            updateSignaturePreviewPosition(button);
+        }
+    });
+    button.addEventListener('focus', () => updateSignaturePreviewPosition(button));
+
+    button.addEventListener('contextmenu', (event) => {
+        if (!canHoverPreview) {
+            event.preventDefault();
+        }
+    });
+
+    button.addEventListener('pointerdown', (event) => {
+        if (canHoverPreview || event.pointerType === 'mouse') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        closeSignaturePreviews();
+        resetSignaturePreviewPan(button);
+        activeSignaturePreviewHold = {
+            button,
+            pointerId: event.pointerId,
+            startPoint: {
+                x: event.clientX,
+                y: event.clientY
+            }
+        };
+        setSignaturePreviewExpanded(button, true);
+
+        try {
+            button.setPointerCapture(event.pointerId);
+        } catch (error) {}
+    });
+
+    button.addEventListener('pointermove', (event) => {
+        if (!activeSignaturePreviewHold || activeSignaturePreviewHold.button !== button || activeSignaturePreviewHold.pointerId !== event.pointerId) {
+            return;
+        }
+
+        event.preventDefault();
+        updateSignaturePreviewPan(button, event, activeSignaturePreviewHold.startPoint);
+    });
+
+    const closeSignaturePreviewHold = (event) => {
+        if (!activeSignaturePreviewHold || activeSignaturePreviewHold.button !== button || activeSignaturePreviewHold.pointerId !== event.pointerId) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        activeSignaturePreviewHold = null;
+        setSignaturePreviewExpanded(button, false);
+
+        try {
+            button.releasePointerCapture(event.pointerId);
+        } catch (error) {}
+    };
+
+    button.addEventListener('pointerup', closeSignaturePreviewHold);
+    button.addEventListener('pointercancel', closeSignaturePreviewHold);
+    button.addEventListener('lostpointercapture', closeSignaturePreviewHold);
+
+    button.addEventListener('click', (event) => {
+        event.stopPropagation();
+
+        if (!canHoverPreview) {
+            event.preventDefault();
+            return;
+        }
+
+        const isExpanded = button.classList.contains('is-enlarged');
+
+        closeSignaturePreviews();
+
+        if (!isExpanded) {
+            setSignaturePreviewExpanded(button, true);
+        }
+    });
+});
+
+if (signaturePreviewButtons.length) {
+    const updateExpandedSignaturePreviews = () => {
+        signaturePreviewButtons.forEach((button) => {
+            if (button.classList.contains('is-enlarged')) {
+                updateSignaturePreviewPosition(button);
+            }
+        });
+    };
+
+    document.addEventListener('click', (event) => {
+        if (![...signaturePreviewButtons].some((button) => button.contains(event.target))) {
+            closeSignaturePreviews();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSignaturePreviews();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (canHoverPreview) {
+            updateExpandedSignaturePreviews();
+            return;
+        }
+
+        closeSignaturePreviews();
+    });
+    window.addEventListener('orientationchange', closeSignaturePreviews);
+    window.addEventListener('scroll', () => {
+        if (canHoverPreview) {
+            updateExpandedSignaturePreviews();
+            return;
+        }
+
+        closeSignaturePreviews();
+    }, { passive: true });
+}
+
+const formatCurrency = (amount) => `$${amount.toFixed(2)}`;
+
+const getVariantKey = ({ name, apparel, size, color }) => `${name}|${apparel}|${size}|${color}`;
+
+const getProductName = (productCard) => productCard.dataset.productName || productCard.querySelector('h1')?.textContent.trim() || 'Product';
+
+const getProductPrice = (productCard) => Number(productCard.dataset.unitPrice) || unitPrice;
+
+const normalizeSlideIndex = (index, slideCount) => (index + slideCount) % slideCount;
+
+const updateProductMediaSize = (image) => {
+    const slider = image.closest('.product-slider');
+    const media = image.closest('.product-media');
+
+    if (!slider || !media) {
+        return;
+    }
+
+    const applySize = () => {
+        if (!image.naturalWidth || !image.naturalHeight) {
+            return;
+        }
+
+        const maxWidth = 170;
+        const maxHeight = 184;
+        const imageRatio = image.naturalWidth / image.naturalHeight;
+        const mediaWidth = Math.min(maxWidth, maxHeight * imageRatio);
+
+        slider.style.setProperty('--product-media-width', `${mediaWidth}px`);
+        media.style.setProperty('--product-media-width', `${mediaWidth}px`);
+    };
+
+    if (image.complete) {
+        applySize();
+        return;
+    }
+
+    image.addEventListener('load', applySize, { once: true });
+};
+
+const updateImageViewer = (slideIndex) => {
+    if (!activeImageGallery || !imageViewerImage) {
+        return;
+    }
+
+    const { slides, setCurrentSlideIndex, productName } = activeImageGallery;
+    const currentSlideIndex = normalizeSlideIndex(slideIndex, slides.length);
+    const slide = slides[currentSlideIndex];
+
+    activeImageGallery.currentSlideIndex = currentSlideIndex;
+    setCurrentSlideIndex(currentSlideIndex);
+
+    imageViewerImage.src = slide.src;
+    imageViewerImage.alt = slide.alt;
+
+    if (imageViewerTitle) {
+        imageViewerTitle.textContent = productName;
+    }
+};
+
+const openImageViewer = (gallery) => {
+    if (!imageViewerModal || !imageViewerImage || !gallery?.slides?.length) {
+        return;
+    }
+
+    activeImageGallery = {
+        ...gallery,
+        currentSlideIndex: gallery.getCurrentSlideIndex()
+    };
+
+    updateImageViewer(activeImageGallery.currentSlideIndex);
+
+    if (typeof imageViewerModal.showModal === 'function' && !imageViewerModal.open) {
+        imageViewerModal.showModal();
+    } else {
+        imageViewerModal.setAttribute('open', '');
+    }
+
+    imageViewerModal.querySelector('.image-viewer-next')?.focus();
+};
+
+document.querySelectorAll('.product-slider').forEach((slider) => {
+    const image = slider.querySelector('[data-slide-image]');
+    const slides = [...slider.querySelectorAll('[data-slide-src]')].map((slide) => ({
+        src: slide.dataset.slideSrc,
+        alt: slide.dataset.slideAlt
+    }));
+    let currentSlide = 0;
+
+    if (!image || slides.length < 2) {
+        return;
+    }
+
+    const setCurrentSlideIndex = (slideIndex) => {
+        currentSlide = normalizeSlideIndex(slideIndex, slides.length);
+        image.src = slides[currentSlide].src;
+        image.alt = slides[currentSlide].alt;
+        updateProductMediaSize(image);
+    };
+
+    updateProductMediaSize(image);
+
+    const showSlide = (direction) => {
+        setCurrentSlideIndex(currentSlide + direction);
+    };
+
+    slider.querySelectorAll('[data-slide-direction]').forEach((button) => {
+        button.addEventListener('click', () => {
+            showSlide(Number(button.dataset.slideDirection));
+        });
+    });
+
+    productGalleries.set(slider, {
+        slides,
+        productName: getProductName(slider.closest('.product-card')),
+        getCurrentSlideIndex: () => currentSlide,
+        setCurrentSlideIndex
+    });
+});
+
+document.querySelectorAll('.product-image-trigger').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+        const slider = trigger.closest('.product-slider');
+        const gallery = productGalleries.get(slider);
+
+        if (gallery) {
+            openImageViewer(gallery);
+        }
+    });
+});
+
+document.querySelectorAll('[data-image-viewer-direction]').forEach((button) => {
+    button.addEventListener('click', () => {
+        if (!activeImageGallery) {
+            return;
+        }
+
+        updateImageViewer(activeImageGallery.currentSlideIndex + Number(button.dataset.imageViewerDirection));
+    });
+});
+
+if (imageViewerClose && imageViewerModal) {
+    imageViewerClose.addEventListener('click', () => {
+        imageViewerModal.close();
+    });
+}
+
+if (imageViewerModal) {
+    imageViewerModal.addEventListener('click', (event) => {
+        if (event.target === imageViewerModal) {
+            imageViewerModal.close();
+        }
+    });
+
+    imageViewerModal.addEventListener('close', () => {
+        activeImageGallery = null;
+    });
+}
+
+document.addEventListener('keydown', (event) => {
+    if (!activeImageGallery || !imageViewerModal?.open) {
+        return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+        updateImageViewer(activeImageGallery.currentSlideIndex - 1);
+    }
+
+    if (event.key === 'ArrowRight') {
+        updateImageViewer(activeImageGallery.currentSlideIndex + 1);
+    }
+});
+
+const getVariantStockLimit = (selection) => {
+    const variantKey = getVariantKey(selection);
+    return inventoryOverrides[variantKey] ?? defaultVariantStock;
+};
+
+const getCartQuantityForVariant = (variantKey) => {
+    return cartItems.reduce((total, item) => {
+        return item.variantKey === variantKey ? total + item.quantity : total;
+    }, 0);
+};
+
+const getCurrentOrderSelection = (productCard, orderPanel) => {
+    const orderData = new FormData(orderPanel);
+
+    return {
+        name: getProductName(productCard),
+        price: getProductPrice(productCard),
+        apparel: orderData.get('apparel'),
+        size: orderData.get('size'),
+        color: orderData.get('color')
+    };
+};
+
+const getRemainingStock = (selection) => {
+    const variantKey = getVariantKey(selection);
+    return Math.max(0, getVariantStockLimit(selection) - getCartQuantityForVariant(variantKey));
+};
+
+const updateAllOrderAvailability = () => {
+    availabilityUpdaters.forEach((updateAvailability) => updateAvailability());
+};
+
+const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
+    return ({ preserveQuantity = true } = {}) => {
+        const quantitySelect = orderPanel.querySelector('select[name="quantity"]');
+        const stockNote = orderPanel.querySelector('.stock-note');
+        const orderSubmit = orderPanel.querySelector('.order-submit');
+
+        if (!quantitySelect || !stockNote || !orderSubmit) {
+            return;
+        }
+
+        const selection = getCurrentOrderSelection(productCard, orderPanel);
+        const remainingStock = getRemainingStock(selection);
+        const previousQuantity = preserveQuantity ? Number(quantitySelect.value) || 0 : 0;
+
+        quantitySelect.innerHTML = '';
+
+        if (remainingStock === 0) {
+            const soldOutOption = document.createElement('option');
+            soldOutOption.value = '0';
+            soldOutOption.textContent = 'Sold out';
+            quantitySelect.append(soldOutOption);
+            quantitySelect.disabled = true;
+            orderSubmit.disabled = true;
+            stockNote.textContent = 'Sold out for this selection.';
+            return;
+        }
+
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = '--';
+        quantitySelect.append(placeholderOption);
+
+        for (let quantity = 1; quantity <= remainingStock; quantity += 1) {
+            const option = document.createElement('option');
+            option.value = String(quantity);
+            option.textContent = String(quantity);
+            quantitySelect.append(option);
+        }
+
+        quantitySelect.disabled = false;
+        orderSubmit.disabled = false;
+        quantitySelect.value = previousQuantity > 0 ? String(Math.min(previousQuantity, remainingStock)) : '';
+        stockNote.textContent = `${remainingStock} available for this selection.`;
+    };
+};
+
+const updateCartButton = () => {
+    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+    if (cartCount && cartButton) {
+        cartCount.textContent = String(itemCount);
+        cartButton.setAttribute('aria-label', `Cart, ${itemCount} item${itemCount === 1 ? '' : 's'}`);
+    }
+};
+
+const updateCartTitle = () => {
+    if (!cartTitle) {
+        return;
+    }
+
+    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    cartTitle.textContent = itemCount === 1 ? 'Your Item' : 'Your Items';
+};
+
+const renderCart = () => {
+    if (!cartItemsContainer || !cartTotal) {
+        return;
+    }
+
+    updateCartTitle();
+
+    if (cartCheckout) {
+        cartCheckout.disabled = cartItems.length === 0;
+    }
+
+    if (cartClear) {
+        cartClear.disabled = cartItems.length === 0;
+    }
+
+    if (cartItems.length === 0) {
+        cartItemsContainer.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+        cartTotal.textContent = '$0.00';
+        return;
+    }
+
+    cartItemsContainer.innerHTML = cartItems.map((item, index) => `
+        <div class="cart-item">
+            <div class="cart-item-title">
+                <span>${item.name}</span>
+                <div class="cart-item-actions">
+                    <span>${formatCurrency(item.quantity * (item.price ?? unitPrice))}</span>
+                    <button class="cart-remove small-action-button" type="button" data-index="${index}">Remove</button>
+                </div>
+            </div>
+            <p class="cart-item-details">${item.apparel} / ${item.size} / ${item.color} / Qty ${item.quantity}</p>
+        </div>
+    `).join('');
+
+    const total = cartItems.reduce((sum, item) => sum + (item.quantity * (item.price ?? unitPrice)), 0);
+    cartTotal.textContent = formatCurrency(total);
+};
+
+if (cartButton && cartModal) {
+    cartButton.addEventListener('click', () => {
+        renderCart();
+
+        if (cartModalNote) {
+            cartModalNote.textContent = cartItems.length ? 'Checkout will be added soon.' : 'Your cart is empty.';
+        }
+
+        if (typeof cartModal.showModal === 'function') {
+            cartModal.showModal();
+        } else {
+            cartModal.setAttribute('open', '');
+        }
+    });
+}
+
+if (cartClose && cartModal) {
+    cartClose.addEventListener('click', () => {
+        cartModal.close();
+    });
+}
+
+if (cartModal) {
+    cartModal.addEventListener('click', (event) => {
+        if (event.target === cartModal) {
+            cartModal.close();
+        }
+    });
+}
+
+if (cartItemsContainer) {
+    cartItemsContainer.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('.cart-remove');
+
+        if (!removeButton) {
+            return;
+        }
+
+        const item = cartItems[Number(removeButton.dataset.index)];
+
+        if (!item) {
+            return;
+        }
+
+        item.quantity -= 1;
+
+        if (item.quantity <= 0) {
+            cartItems.splice(Number(removeButton.dataset.index), 1);
+        }
+
+        updateCartButton();
+        renderCart();
+        updateAllOrderAvailability();
+
+        if (cartModalNote) {
+            cartModalNote.textContent = cartItems.length ? '1 item removed from your cart.' : 'Your cart is empty.';
+        }
+    });
+}
+
+if (cartClear) {
+    cartClear.addEventListener('click', () => {
+        cartItems.length = 0;
+        updateCartButton();
+        renderCart();
+        updateAllOrderAvailability();
+
+        if (cartModalNote) {
+            cartModalNote.textContent = 'Your cart has been cleared.';
+        }
+    });
+}
+
+if (cartCheckout && cartModalNote) {
+    cartCheckout.addEventListener('click', () => {
+        cartModalNote.textContent = cartItems.length ? 'Checkout will be added soon.' : 'Your cart is empty.';
+    });
+}
+
+productCards.forEach((productCard) => {
+    const orderToggle = productCard.querySelector('.order-toggle');
+    const orderTriggers = productCard.querySelectorAll('.order-toggle');
+    const orderModal = productCard.querySelector('.order-modal');
+    const orderPanel = productCard.querySelector('.order-panel');
+    const orderClose = productCard.querySelector('.order-close');
+
+    if (!orderPanel || !orderModal) {
+        return;
+    }
+
+    const firstOrderSelect = orderPanel.querySelector('select');
+    const orderMessage = orderPanel.querySelector('.order-message');
+    const updateAvailability = createOrderAvailabilityUpdater(productCard, orderPanel);
+
+    availabilityUpdaters.push(updateAvailability);
+
+    const openOrderModal = () => {
+        updateAvailability({ preserveQuantity: false });
+
+        if (orderMessage) {
+            orderMessage.textContent = '';
+        }
+
+        if (orderToggle) {
+            orderToggle.setAttribute('aria-expanded', 'true');
+        }
+
+        if (orderModal && typeof orderModal.showModal === 'function' && !orderModal.open) {
+            orderModal.showModal();
+        } else if (orderModal) {
+            orderModal.setAttribute('open', '');
+        }
+
+        if (firstOrderSelect) {
+            firstOrderSelect.focus();
+        }
+    };
+
+    const closeOrderModal = () => {
+        if (orderModal?.open && typeof orderModal.close === 'function') {
+            orderModal.close();
+            return;
+        }
+
+        orderModal?.removeAttribute('open');
+
+        if (orderToggle) {
+            orderToggle.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    orderTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', openOrderModal);
+    });
+
+    orderClose?.addEventListener('click', closeOrderModal);
+
+    orderModal?.addEventListener('close', () => {
+        if (orderToggle) {
+            orderToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    orderModal?.addEventListener('click', (event) => {
+        if (event.target === orderModal) {
+            closeOrderModal();
+        }
+    });
+
+    orderPanel.querySelectorAll('select[name="apparel"], select[name="size"], select[name="color"]').forEach((select) => {
+        select.addEventListener('change', () => {
+            updateAvailability({ preserveQuantity: false });
+
+            if (orderMessage) {
+                orderMessage.textContent = '';
+            }
+        });
+    });
+
+    orderPanel.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const orderData = new FormData(orderPanel);
+        const selection = getCurrentOrderSelection(productCard, orderPanel);
+        const variantKey = getVariantKey(selection);
+        const remainingStock = getRemainingStock(selection);
+        const quantity = Number(orderData.get('quantity')) || 0;
+
+        if (remainingStock === 0) {
+            orderMessage.textContent = 'This selection is sold out.';
+            updateAvailability();
+            return;
+        }
+
+        if (quantity === 0) {
+            orderMessage.textContent = 'Please select a quantity.';
+            updateAvailability({ preserveQuantity: false });
+            return;
+        }
+
+        if (quantity < 1 || quantity > remainingStock) {
+            orderMessage.textContent = `Only ${remainingStock} available for this selection.`;
+            updateAvailability();
+            return;
+        }
+
+        const existingItem = cartItems.find((item) => item.variantKey === variantKey);
+
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cartItems.push({
+                ...selection,
+                variantKey,
+                quantity
+            });
+        }
+
+        updateCartButton();
+        renderCart();
+        updateAvailability({ preserveQuantity: false });
+
+        if (cartModalNote) {
+            cartModalNote.textContent = 'Checkout will be added soon.';
+        }
+
+        orderMessage.textContent = `${quantity} item${quantity === 1 ? '' : 's'} added to your cart.`;
+    });
+});

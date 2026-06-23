@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross Wear</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Shop Cross Wear — Canadian-owned Christian apparel. Premium hoodies, crewnecks, and scripture-inspired designs made to let you wear your faith.">
+    <link rel="canonical" href="https://jesuscrosswear.ca/home.html">
+    <link rel="icon" type="image/png" href="images/Websitehalflogo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Cross Wear">
+    <meta property="og:title" content="Cross Wear — Premium Christian Apparel">
+    <meta property="og:description" content="Premium hoodies, crewnecks, and scripture-inspired designs made to let you wear your faith.">
+    <meta property="og:url" content="https://jesuscrosswear.ca/home.html">
+    <meta property="og:image" content="https://jesuscrosswear.ca/images/Websitelogo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cross Wear — Premium Christian Apparel">
+    <meta name="twitter:description" content="Premium hoodies, crewnecks, and scripture-inspired designs made to let you wear your faith.">
+    <meta name="twitter:image" content="https://jesuscrosswear.ca/images/Websitelogo.png">
+    <link rel="preload" as="image" href="images/Signature~Hoodie-mobile.png" media="(max-width: 760px)" fetchpriority="high">
+    <link rel="preload" as="image" href="images/Signature~Hoodie.png" media="(min-width: 761px)" fetchpriority="high">
+</head>
+
+<body class="home-page auth-required" data-login-page="index.html">
+
+    <header>
+        <img src="images/Websitelogo.png" alt="Cross Wear Logo" class="home-side-logo">
+        <div class="header-row">
+            <div class="brand-area">
+                <div class="logo-wrap">
+                    <img src="images/Websitehalflogo.png" alt="Cross Wear Logo" class="logo">
+                </div>
+            </div>
+            <div class="nav-area">
+                <nav class="main-nav" aria-label="Main navigation">
+                    <a href="home.html" aria-current="page">Home</a>
+                    <a href="pages/about.html">About</a>
+                    <a href="pages/contact.html">Contact</a>
+                    <button class="cart-button" type="button" aria-label="Cart, 0 items" aria-haspopup="dialog" aria-controls="cart-modal">
+                        <svg class="cart-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                            <path d="M6 8h12l-1 12H7L6 8Z"></path>
+                            <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
+                        </svg>
+                        <span class="cart-count">0</span>
+                    </button>
+                </nav>
+                <p class="nav-note">Proudly Canadian Owned &amp; Operated</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="visually-hidden">Cross Wear — Premium Christian Apparel</h1>
+        <section class="signature-collection" aria-labelledby="signature-title">
+            <h2 class="signature-heading" id="signature-title"><span>Signature Collection</span></h2>
+            <div class="signature-feature">
+                <article class="signature-product-card" data-product-name="Signature Hoodie" data-unit-price="110.00" aria-labelledby="signature-hoodie-title" aria-describedby="signature-hoodie-specs">
+                    <button class="signature-product-media signature-hoodie-preview" type="button" aria-label="Enlarge Signature Hoodie apparel preview" aria-pressed="false">
+                        <picture>
+                            <source media="(max-width: 760px)" srcset="images/Signature~Hoodie-mobile.png">
+                            <img src="images/Signature~Hoodie.png" alt="Signature Hoodie apparel photo" width="1122" height="1091" decoding="async" fetchpriority="high">
+                        </picture>
+                    </button>
+                    <div class="signature-product-content">
+                        <p class="signature-kicker">Signature Style</p>
+                        <h3 id="signature-hoodie-title">Product Description</h3>
+                        <p class="signature-spec-intro">Premium Hoodie</p>
+                        <div class="signature-spec-copy" id="signature-hoodie-specs">
+                            <p>Premium materials use 100% cotton or 100% organic cotton, substantial hand-feel.</p>
+                            <p>Heavyweight options use 450 GSM fleece with 450 GSM rib, ribbed cuffs and waistbands, double-layer hoods, and four-thread overlock stitching.</p>
+                        </div>
+                        <div class="product-action-row signature-action-row">
+                            <p class="product-price">$196.00</p>
+                            <button class="order-toggle" type="button" aria-expanded="false" aria-controls="signature-hoodie-order">Add Items</button>
+                        </div>
+                    </div>
+
+                    <dialog class="order-modal" id="signature-hoodie-order" aria-labelledby="signature-hoodie-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="signature-hoodie-order-title">Signature Hoodie</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">Premium Hoodie, 450 GSM.</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Hoodie</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </article>
+
+                <article class="signature-product-card signature-product-card-reverse" data-product-name="Signature Jesus" data-unit-price="110.00" aria-labelledby="signature-jesus-title" aria-describedby="signature-jesus-specs">
+                    <button class="signature-product-media signature-jesus-preview" type="button" aria-label="Enlarge Signature Jesus apparel preview" aria-pressed="false">
+                        <picture>
+                            <source media="(max-width: 760px)" srcset="images/Signature~Jesus-mobile.png">
+                            <img src="images/Signature~Jesus.png" alt="Signature Jesus hoodie apparel photo" width="1122" height="1130" decoding="async">
+                        </picture>
+                    </button>
+                    <div class="signature-product-content">
+                        <p class="signature-kicker">Signature Style</p>
+                        <h3 id="signature-jesus-title">Product Description</h3>
+                        <p class="signature-spec-intro">Premium Crewneck.</p>
+                        <div class="signature-spec-copy" id="signature-jesus-specs">
+                            <p>Made on premium materials with 100% cotton or 100% organic cotton, for a substantial everyday fit.</p>
+                            <p>Heavyweight builds use 450 GSM fleece with 450 GSM rib, ribbed cuffs and waistbands, and four-thread overlock.</p>
+                        </div>
+                        <div class="product-action-row signature-action-row">
+                            <p class="product-price">$187.00</p>
+                            <button class="order-toggle" type="button" aria-expanded="false" aria-controls="signature-jesus-order">Add Items</button>
+                        </div>
+                    </div>
+
+                    <dialog class="order-modal" id="signature-jesus-order" aria-labelledby="signature-jesus-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="signature-jesus-order-title">Signature Jesus</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">Premium Crewneck, 450 GSM.</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Crewneck</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </article>
+
+                <article class="signature-product-card" data-product-name="Signature Saved" data-unit-price="110.00" aria-labelledby="signature-saved-title" aria-describedby="signature-saved-specs">
+                    <button class="signature-product-media signature-saved-preview" type="button" aria-label="Enlarge Signature Saved apparel preview" aria-pressed="false">
+                        <picture>
+                            <source media="(max-width: 760px)" srcset="images/Signature~Saved-mobile.png">
+                            <img src="images/Signature~Saved.png" alt="Signature Saved hoodie apparel photo" width="1122" height="1102" decoding="async">
+                        </picture>
+                    </button>
+                    <div class="signature-product-content">
+                        <p class="signature-kicker">~Saved~</p>
+                        <h3 id="signature-saved-title">Product Description</h3>
+                        <p class="signature-spec-intro">Premium Crewneck</p>
+                        <div class="signature-spec-copy" id="signature-saved-specs">
+                            <p>Materials using 100% cotton or 100% organic cotton, softness, and lasting comfort.</p>
+                            <p>Heavyweight options use 450 GSM fleece with 450 GSM rib, ribbed cuffs and waistbands, and four-thread overlock stitching.</p>
+                        </div>
+                        <div class="product-action-row signature-action-row">
+                            <p class="product-price">$187.00</p>
+                            <button class="order-toggle" type="button" aria-expanded="false" aria-controls="signature-saved-order">Add Items</button>
+                        </div>
+                    </div>
+
+                    <dialog class="order-modal" id="signature-saved-order" aria-labelledby="signature-saved-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="signature-saved-order-title">Signature Saved</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">Premium Crewneck 450 GSM.</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Crewneck</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </article>
+            </div>
+        </section>
+
+        <section class="product-section" id="shop" aria-labelledby="scripture-title">
+            <h2 class="signature-heading" id="scripture-title"><span>Scripture Collection</span></h2>
+            <div class="product-grid">
+            <article class="product-card" data-product-name="Ezekiel 36:26" data-unit-price="62.78">
+                <h3 id="ezekiel-product-title">Ezekiel 36:26</h3>
+                <div class="product-slider" data-product-slider>
+                    <button class="slide-arrow slide-arrow-prev" type="button" aria-label="Previous Ezekiel image" data-slide-direction="-1"></button>
+                    <button class="product-media product-image-trigger" type="button" aria-label="View Ezekiel 36:26 image" aria-haspopup="dialog" aria-controls="image-viewer-modal">
+                        <img src="images/Ezekiel 36.26.png" alt="Ezekiel 36:26 apparel design" data-slide-image>
+                    </button>
+                    <button class="slide-arrow slide-arrow-next" type="button" aria-label="Next Ezekiel image" data-slide-direction="1"></button>
+                    <div class="product-slide-data" hidden>
+                        <span data-slide-src="images/Ezekiel 36.26.png" data-slide-alt="Ezekiel 36:26 apparel design"></span>
+                        <span data-slide-src="images/Embroider.png" data-slide-alt="Ezekiel 36:26 embroidered detail"></span>
+                    </div>
+                </div>
+                <div class="product-details">
+                    <p class="product-quote">"I will remove your heart of stone and give you a heart of flesh"</p>
+
+                    <div class="product-action-row">
+                        <p class="product-price">$62.78</p>
+                        <button class="order-toggle" type="button" aria-expanded="false" aria-controls="ezekiel-order">Add Items</button>
+                    </div>
+
+                    <dialog class="order-modal" id="ezekiel-order" aria-labelledby="ezekiel-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="ezekiel-order-title">Ezekiel 36:26</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">"I will remove your heart of stone and give you a heart of flesh"</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Hoodie</option>
+                                        <option>Crewneck</option>
+                                        <option>T-shirt</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </div>
+            </article>
+            <article class="product-card" data-product-name="Matthew 11:28" data-unit-price="57.49">
+                <h3 id="matthew-product-title">Matthew 11:28</h3>
+                <div class="product-slider" data-product-slider>
+                    <button class="slide-arrow slide-arrow-prev" type="button" aria-label="Previous Matthew image" data-slide-direction="-1"></button>
+                    <button class="product-media product-image-trigger" type="button" aria-label="View Matthew 11:28 image" aria-haspopup="dialog" aria-controls="image-viewer-modal">
+                        <img src="images/Matthew 11.28.png" alt="Matthew 11:28 apparel design" data-slide-image>
+                    </button>
+                    <button class="slide-arrow slide-arrow-next" type="button" aria-label="Next Matthew image" data-slide-direction="1"></button>
+                    <div class="product-slide-data" hidden>
+                        <span data-slide-src="images/Matthew 11.28.png" data-slide-alt="Matthew 11:28 apparel design"></span>
+                        <span data-slide-src="images/handwrittenfront.jpg" data-slide-alt="Jesus handwritten front design"></span>
+                    </div>
+                </div>
+                <div class="product-details">
+                    <p class="product-quote">"Come to me, all who are weary, and I will give you rest."</p>
+
+                    <div class="product-action-row">
+                        <p class="product-price">$57.49</p>
+                        <button class="order-toggle" type="button" aria-expanded="false" aria-controls="matthew-order">Add Items</button>
+                    </div>
+
+                    <dialog class="order-modal" id="matthew-order" aria-labelledby="matthew-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="matthew-order-title">Matthew 11:28</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">"Come to me, all who are weary, and I will give you rest."</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Hoodie</option>
+                                        <option>Crewneck</option>
+                                        <option>T-shirt</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </div>
+            </article>
+            <article class="product-card" data-product-name="John 14:30" data-unit-price="58.72">
+                <h3 id="john-product-title">John 14:30</h3>
+                <div class="product-slider" data-product-slider>
+                    <button class="slide-arrow slide-arrow-prev" type="button" aria-label="Previous John image" data-slide-direction="-1"></button>
+                    <button class="product-media product-image-trigger" type="button" aria-label="View John 14:30 image" aria-haspopup="dialog" aria-controls="image-viewer-modal">
+                        <img src="images/John 14.30.png" alt="John 14:30 apparel design" data-slide-image>
+                    </button>
+                    <button class="slide-arrow slide-arrow-next" type="button" aria-label="Next John image" data-slide-direction="1"></button>
+                    <div class="product-slide-data" hidden>
+                        <span data-slide-src="images/John 14.30.png" data-slide-alt="John 14:30 apparel design"></span>
+                        <span data-slide-src="images/oldenglishfront.jpg" data-slide-alt="Jesus old English front design"></span>
+                    </div>
+                </div>
+                <div class="product-details">
+                    <p class="product-quote">"The ruler of this world is coming. He has no claim on me."</p>
+
+                    <div class="product-action-row">
+                        <p class="product-price">$58.72</p>
+                        <button class="order-toggle" type="button" aria-expanded="false" aria-controls="john-order">Add Items</button>
+                    </div>
+
+                    <dialog class="order-modal" id="john-order" aria-labelledby="john-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="john-order-title">John 14:30</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">"The ruler of this world is coming. He has no claim on me."</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Hoodie</option>
+                                        <option>Crewneck</option>
+                                        <option>T-shirt</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </div>
+            </article>
+            <article class="product-card" data-product-name="Luke 17:21" data-unit-price="52.67">
+                <h3 id="luke-product-title">Luke 17:21</h3>
+                <div class="product-slider" data-product-slider>
+                    <button class="slide-arrow slide-arrow-prev" type="button" aria-label="Previous Luke image" data-slide-direction="-1"></button>
+                    <button class="product-media product-image-trigger" type="button" aria-label="View Luke 17:21 image" aria-haspopup="dialog" aria-controls="image-viewer-modal">
+                        <img src="images/luke 17.21.jpg" alt="Luke 17:21 apparel design" data-slide-image>
+                    </button>
+                    <button class="slide-arrow slide-arrow-next" type="button" aria-label="Next Luke image" data-slide-direction="1"></button>
+                    <div class="product-slide-data" hidden>
+                        <span data-slide-src="images/luke 17.21.jpg" data-slide-alt="Luke 17:21 apparel design"></span>
+                        <span data-slide-src="images/handwrittenfront.jpg" data-slide-alt="Jesus handwritten front design"></span>
+                    </div>
+                </div>
+                <div class="product-details">
+                    <p class="product-quote">"the Kingdom of God is within you"</p>
+
+                    <div class="product-action-row">
+                        <p class="product-price">$52.67</p>
+                        <button class="order-toggle" type="button" aria-expanded="false" aria-controls="luke-order">Add Items</button>
+                    </div>
+
+                    <dialog class="order-modal" id="luke-order" aria-labelledby="luke-order-title">
+                        <form class="order-panel">
+                            <div class="order-panel-header">
+                                <h2 id="luke-order-title">Luke 17:21</h2>
+                                <button class="order-close small-action-button" type="button">Close</button>
+                            </div>
+                            <p class="order-description">"the Kingdom of God is within you"</p>
+                            <div class="order-grid">
+                                <label>
+                                    Apparel
+                                    <select name="apparel">
+                                        <option>Hoodie</option>
+                                        <option>Crewneck</option>
+                                        <option>T-shirt</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Size
+                                    <select name="size">
+                                        <option>S</option>
+                                        <option>M</option>
+                                        <option>L</option>
+                                        <option>XL</option>
+                                        <option>XXL</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Color
+                                    <select name="color">
+                                        <option>Black</option>
+                                        <option>White</option>
+                                        <option>Pink</option>
+                                        <option>Grey</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Quantity
+                                    <select name="quantity">
+                                        <option value="" selected>--</option>
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="stock-note">10 available in each size and color.</p>
+                            <button class="order-submit" type="submit">Add Items</button>
+                            <p class="order-message" aria-live="polite"></p>
+                        </form>
+                    </dialog>
+                </div>
+            </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" aria-label="Footer">
+        <div class="site-footer-inner">
+            <nav class="footer-nav" aria-label="Footer navigation">
+                <a href="pages/terms.html">Terms &amp; Conditions</a>
+                <a href="pages/privacy.html">Privacy Policy</a>
+                <a href="pages/refunds.html">Refund Policy</a>
+                <a href="pages/shipping.html">Shipping Policy</a>
+            </nav>
+            <p class="footer-brand-statement"></p>
+            <p class="footer-copyright">&copy; 2026 Cross Wear. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <dialog class="image-viewer-modal" id="image-viewer-modal" aria-labelledby="image-viewer-title">
+        <div class="image-viewer-panel">
+            <div class="image-viewer-header">
+                <h2 id="image-viewer-title">Product Image</h2>
+                <button class="image-viewer-close small-action-button" type="button">Close</button>
+            </div>
+            <div class="image-viewer-stage">
+                <button class="image-viewer-arrow image-viewer-prev" type="button" aria-label="Previous image" data-image-viewer-direction="-1"></button>
+                <img class="image-viewer-image" src="" alt="">
+                <button class="image-viewer-arrow image-viewer-next" type="button" aria-label="Next image" data-image-viewer-direction="1"></button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog class="cart-modal" id="cart-modal" aria-labelledby="cart-modal-title">
+        <div class="cart-modal-panel">
+            <div class="cart-modal-header">
+                <h2 id="cart-modal-title">Your Items</h2>
+                <button class="cart-close small-action-button" type="button">Close</button>
+            </div>
+            <div class="cart-items" aria-live="polite">
+                <p class="cart-empty">Your cart is empty.</p>
+            </div>
+            <div class="cart-total-row">
+                <span>Total</span>
+                <strong class="cart-total">$0.00</strong>
+            </div>
+            <div class="cart-actions">
+                <button class="cart-clear" type="button">Clear Cart</button>
+                <button class="cart-checkout" type="button">Checkout</button>
+            </div>
+            <p class="cart-modal-note">Checkout will be added soon.</p>
+        </div>
+    </dialog>
+
+    <script src="js/gate.js"></script>
+    <script src="js/script.js"></script>
+
+</body>
+</html>
