@@ -542,7 +542,7 @@ header {
     text-shadow: none;
 }
 
-.product-card h3,
+.product-card h3 {
     text-shadow: none;
 }
 
@@ -1125,9 +1125,10 @@ body.about-background .about-hero {
 .signature-product-card h3 {
     margin: 0;
     color: var(--luxury-clean-gold);
-    font-family: Georgia, 'Times New Roman', serif;
-    font-weight: 500;
-    line-height: 1.04;
+    font-family: 'Edwardian Script ITC', 'Lucida Handwriting', 'Segoe Script', 'Brush Script MT', cursive;
+    font-weight: 400;
+    letter-spacing: 1.15px;
+    line-height: 1;
     background: none;
     -webkit-text-fill-color: currentColor;
 }
@@ -1349,7 +1350,7 @@ body.about-background .about-hero {
     margin: 0;
     color: var(--luxury-clean-gold);
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(25px, 2.5vw, 32px);
+    font-size: clamp(16.25px, 1.625vw, 20.8px);
     font-weight: 500;
     line-height: 1;
     background: none;
@@ -1390,7 +1391,7 @@ body.about-background .about-hero {
     margin: 0;
     color: var(--luxury-clean-gold);
     font-size: 21px;
-    font-weight: 800;
+    font-weight: 400;
     background: none;
     -webkit-text-fill-color: currentColor;
 }
@@ -1403,7 +1404,7 @@ body.about-background .about-hero {
     color: var(--luxury-button-text);
     cursor: pointer;
     font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
-    font-size: 11px;
+    font-size: 8.25px;
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -1411,13 +1412,14 @@ body.about-background .about-hero {
 }
 
 .order-toggle {
-    min-width: 118px;
-    padding: 13px 31px;
+    min-width: 88.5px;
+    padding: 9.75px 23.25px;
 }
 
 .order-submit {
-    width: 100%;
-    padding: 14px 40px;
+    width: 75%;
+    justify-self: center;
+    padding: 10.5px 30px;
 }
 
 .order-toggle:hover,
@@ -1762,6 +1764,10 @@ body.about-background .about-hero {
     white-space: nowrap;
 }
 
+.cart-item-actions span {
+    font-weight: 400;
+}
+
 .cart-item-details {
     margin: 0;
     color: #4d402a;
@@ -1810,7 +1816,11 @@ body.about-background .about-hero {
     border-top: 1px solid rgba(143, 100, 28, 0.28);
     color: #8f641c;
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 400;
+}
+
+.cart-total {
+    font-weight: 400;
 }
 
 .cart-actions {
