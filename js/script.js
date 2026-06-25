@@ -57,7 +57,8 @@ const availabilityUpdaters = [];
 const productGalleries = new Map();
 let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
-let activeSignaturePreviewHold = null;
+const previewTapMoveThreshold = 8;
+let activeSignaturePreviewInteraction = null;
 
 const preloadImage = (src) => {
     const image = new Image();
@@ -85,6 +86,10 @@ const preloadImageAfterLoad = (src) => {
 };
 
 const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const hasMovedPastTapThreshold = (event, startPoint) => {
+    return Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y) > previewTapMoveThreshold;
+};
 
 const getCssNumber = (element, propertyName, fallback = 0) => {
     const value = Number.parseFloat(window.getComputedStyle(element).getPropertyValue(propertyName));
@@ -187,17 +192,24 @@ signaturePreviewButtons.forEach((button) => {
 
         event.preventDefault();
         event.stopPropagation();
-        closeSignaturePreviews();
-        resetSignaturePreviewPan(button);
-        activeSignaturePreviewHold = {
+        const wasExpanded = button.classList.contains('is-enlarged');
+
+        if (!wasExpanded) {
+            closeSignaturePreviews();
+            resetSignaturePreviewPan(button);
+            setSignaturePreviewExpanded(button, true);
+        }
+
+        activeSignaturePreviewInteraction = {
             button,
             pointerId: event.pointerId,
+            wasExpanded,
+            hasMoved: false,
             startPoint: {
                 x: event.clientX,
                 y: event.clientY
             }
         };
-        setSignaturePreviewExpanded(button, true);
 
         try {
             button.setPointerCapture(event.pointerId);
@@ -205,32 +217,37 @@ signaturePreviewButtons.forEach((button) => {
     });
 
     button.addEventListener('pointermove', (event) => {
-        if (!activeSignaturePreviewHold || activeSignaturePreviewHold.button !== button || activeSignaturePreviewHold.pointerId !== event.pointerId) {
+        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
             return;
         }
 
         event.preventDefault();
-        updateSignaturePreviewPan(button, event, activeSignaturePreviewHold.startPoint);
+        activeSignaturePreviewInteraction.hasMoved = activeSignaturePreviewInteraction.hasMoved || hasMovedPastTapThreshold(event, activeSignaturePreviewInteraction.startPoint);
+        updateSignaturePreviewPan(button, event, activeSignaturePreviewInteraction.startPoint);
     });
 
-    const closeSignaturePreviewHold = (event) => {
-        if (!activeSignaturePreviewHold || activeSignaturePreviewHold.button !== button || activeSignaturePreviewHold.pointerId !== event.pointerId) {
+    const endSignaturePreviewInteraction = (event, shouldHandleTap = false) => {
+        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
             return;
         }
 
         event.preventDefault();
         event.stopPropagation();
-        activeSignaturePreviewHold = null;
-        setSignaturePreviewExpanded(button, false);
+        const interaction = activeSignaturePreviewInteraction;
+        activeSignaturePreviewInteraction = null;
+
+        if (shouldHandleTap && interaction.wasExpanded && !interaction.hasMoved) {
+            setSignaturePreviewExpanded(button, false);
+        }
 
         try {
             button.releasePointerCapture(event.pointerId);
         } catch (error) {}
     };
 
-    button.addEventListener('pointerup', closeSignaturePreviewHold);
-    button.addEventListener('pointercancel', closeSignaturePreviewHold);
-    button.addEventListener('lostpointercapture', closeSignaturePreviewHold);
+    button.addEventListener('pointerup', (event) => endSignaturePreviewInteraction(event, true));
+    button.addEventListener('pointercancel', endSignaturePreviewInteraction);
+    button.addEventListener('lostpointercapture', endSignaturePreviewInteraction);
 
     button.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -260,6 +277,11 @@ if (signaturePreviewButtons.length) {
     };
 
     document.addEventListener('click', (event) => {
+        if (!canHoverPreview && [...signaturePreviewButtons].some((button) => button.classList.contains('is-enlarged'))) {
+            closeSignaturePreviews();
+            return;
+        }
+
         if (![...signaturePreviewButtons].some((button) => button.contains(event.target))) {
             closeSignaturePreviews();
         }

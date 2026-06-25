@@ -35,9 +35,14 @@ const previewImageButton = document.querySelector('.coming-soon-preview-image');
 if (previewImageButton) {
     const previewCanHover = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
     const previewImage = previewImageButton.querySelector('img');
-    let activePreviewHold = null;
+    const previewTapMoveThreshold = 8;
+    let activePreviewInteraction = null;
 
     const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const hasMovedPastTapThreshold = (event, startPoint) => {
+        return Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y) > previewTapMoveThreshold;
+    };
 
     const getCssNumber = (element, propertyName, fallback = 0) => {
         const value = Number.parseFloat(window.getComputedStyle(element).getPropertyValue(propertyName));
@@ -117,15 +122,22 @@ if (previewImageButton) {
 
         event.preventDefault();
         event.stopPropagation();
-        resetPreviewPan();
-        activePreviewHold = {
+        const wasExpanded = previewImageButton.classList.contains('is-enlarged');
+
+        if (!wasExpanded) {
+            resetPreviewPan();
+            setPreviewImageExpanded(true);
+        }
+
+        activePreviewInteraction = {
             pointerId: event.pointerId,
+            wasExpanded,
+            hasMoved: false,
             startPoint: {
                 x: event.clientX,
                 y: event.clientY
             }
         };
-        setPreviewImageExpanded(true);
 
         try {
             previewImageButton.setPointerCapture(event.pointerId);
@@ -133,32 +145,37 @@ if (previewImageButton) {
     });
 
     previewImageButton.addEventListener('pointermove', (event) => {
-        if (!activePreviewHold || activePreviewHold.pointerId !== event.pointerId) {
+        if (!activePreviewInteraction || activePreviewInteraction.pointerId !== event.pointerId) {
             return;
         }
 
         event.preventDefault();
-        updatePreviewPan(event, activePreviewHold.startPoint);
+        activePreviewInteraction.hasMoved = activePreviewInteraction.hasMoved || hasMovedPastTapThreshold(event, activePreviewInteraction.startPoint);
+        updatePreviewPan(event, activePreviewInteraction.startPoint);
     });
 
-    const closePreviewHold = (event) => {
-        if (!activePreviewHold || activePreviewHold.pointerId !== event.pointerId) {
+    const endPreviewInteraction = (event, shouldHandleTap = false) => {
+        if (!activePreviewInteraction || activePreviewInteraction.pointerId !== event.pointerId) {
             return;
         }
 
         event.preventDefault();
         event.stopPropagation();
-        activePreviewHold = null;
-        setPreviewImageExpanded(false);
+        const interaction = activePreviewInteraction;
+        activePreviewInteraction = null;
+
+        if (shouldHandleTap && interaction.wasExpanded && !interaction.hasMoved) {
+            setPreviewImageExpanded(false);
+        }
 
         try {
             previewImageButton.releasePointerCapture(event.pointerId);
         } catch (error) {}
     };
 
-    previewImageButton.addEventListener('pointerup', closePreviewHold);
-    previewImageButton.addEventListener('pointercancel', closePreviewHold);
-    previewImageButton.addEventListener('lostpointercapture', closePreviewHold);
+    previewImageButton.addEventListener('pointerup', (event) => endPreviewInteraction(event, true));
+    previewImageButton.addEventListener('pointercancel', endPreviewInteraction);
+    previewImageButton.addEventListener('lostpointercapture', endPreviewInteraction);
 
     previewImageButton.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -172,6 +189,11 @@ if (previewImageButton) {
     });
 
     document.addEventListener('click', (event) => {
+        if (!previewCanHover && previewImageButton.classList.contains('is-enlarged')) {
+            setPreviewImageExpanded(false);
+            return;
+        }
+
         if (!previewImageButton.contains(event.target)) {
             setPreviewImageExpanded(false);
         }

@@ -460,11 +460,11 @@ header {
     justify-content: center;
     width: 112px;
     min-width: 112px;
-    height: 42px;
+    height: 33.6px;
     box-sizing: border-box;
     color: var(--luxury-button-text);
     text-decoration: none;
-    padding: 14px 0;
+    padding: 11.2px 0;
     border: none;
     background: var(--luxury-button-bg);
     box-shadow: 0 10px 24px rgba(17, 17, 17, 0.16);
@@ -1980,8 +1980,8 @@ body.about-background .about-hero {
 .cart-button {
         width: 140px;
         min-width: 90px;
-        height: 33px;
-        padding: 10px 0;
+        height: 26.4px;
+        padding: 8px 0;
         font-size: 9px;
     }
 
@@ -2163,8 +2163,8 @@ body.about-background .about-hero {
     .cart-button {
         width: 80px;
         min-width: 80px;
-        height: 33px;
-        padding: 10px 0;
+        height: 26.4px;
+        padding: 8px 0;
         font-size: 9px;
     }
 
