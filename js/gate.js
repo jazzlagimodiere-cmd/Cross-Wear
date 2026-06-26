@@ -3,6 +3,49 @@ const previewAccessValue = 'granted';
 const previewLogin = 'Crosswear';
 const previewPassword = 'Jesus2026';
 
+const cleanPagePaths = new Map([
+    ['/index.html', '/'],
+    ['/home.html', '/home'],
+    ['/pages/about.html', '/about'],
+    ['/pages/contact.html', '/contact'],
+    ['/pages/terms.html', '/terms'],
+    ['/pages/privacy.html', '/privacy'],
+    ['/pages/refunds.html', '/refunds'],
+    ['/pages/shipping.html', '/shipping']
+]);
+
+const cleanCurrentAddress = () => {
+    if (!['http:', 'https:'].includes(window.location.protocol) || !window.history?.replaceState) {
+        return;
+    }
+
+    const cleanPath = cleanPagePaths.get(window.location.pathname);
+
+    if (!cleanPath) {
+        return;
+    }
+
+    window.history.replaceState(null, '', `${cleanPath}${window.location.search}${window.location.hash}`);
+};
+
+cleanCurrentAddress();
+
+const contactAddressKey = 23;
+const contactAddressCodes = [126, 121, 113, 120, 87, 125, 114, 100, 98, 100, 116, 101, 120, 100, 100, 96, 114, 118, 101, 57, 116, 118];
+const getContactAddress = () => String.fromCharCode(...contactAddressCodes.map((code) => code ^ contactAddressKey));
+
+const hydrateContactLinks = () => {
+    const contactAddress = getContactAddress();
+
+    document.querySelectorAll('[data-email-link]').forEach((link) => {
+        link.href = `mailto:${contactAddress}`;
+
+        if (link.dataset.emailDisplay === 'address') {
+            link.textContent = contactAddress;
+        }
+    });
+};
+
 const getPreviewStorage = () => {
     try {
         const testKey = `${previewAccessKey}Test`;
@@ -23,8 +66,10 @@ const savePreviewAccess = () => {
 
 const body = document.body;
 
+hydrateContactLinks();
+
 if (body.classList.contains('auth-required') && !hasPreviewAccess()) {
-    const loginPage = body.dataset.loginPage || 'index.html';
+    const loginPage = body.dataset.loginPage || '/';
     window.location.replace(loginPage);
 }
 
@@ -109,6 +154,26 @@ if (previewImageButton) {
         previewImageButton.setAttribute('aria-pressed', String(isExpanded));
     };
 
+    const togglePreviewImageExpanded = () => {
+        setPreviewImageExpanded(!previewImageButton.classList.contains('is-enlarged'));
+    };
+
+    let ignorePreviewKeyboardClick = false;
+
+    const handlePreviewKeyboardActivation = (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        ignorePreviewKeyboardClick = true;
+        window.setTimeout(() => {
+            ignorePreviewKeyboardClick = false;
+        }, 100);
+        togglePreviewImageExpanded();
+    };
+
     previewImageButton.addEventListener('contextmenu', (event) => {
         if (!previewCanHover) {
             event.preventDefault();
@@ -176,16 +241,23 @@ if (previewImageButton) {
     previewImageButton.addEventListener('pointerup', (event) => endPreviewInteraction(event, true));
     previewImageButton.addEventListener('pointercancel', endPreviewInteraction);
     previewImageButton.addEventListener('lostpointercapture', endPreviewInteraction);
+    previewImageButton.addEventListener('keydown', handlePreviewKeyboardActivation);
 
     previewImageButton.addEventListener('click', (event) => {
         event.stopPropagation();
 
-        if (!previewCanHover) {
+        if (ignorePreviewKeyboardClick) {
+            ignorePreviewKeyboardClick = false;
             event.preventDefault();
             return;
         }
 
-        setPreviewImageExpanded(!previewImageButton.classList.contains('is-enlarged'));
+        if (!previewCanHover && event.detail !== 0) {
+            event.preventDefault();
+            return;
+        }
+
+        togglePreviewImageExpanded();
     });
 
     document.addEventListener('click', (event) => {
@@ -217,7 +289,7 @@ if (previewImageButton) {
 }
 
 if (gateForm) {
-    const successTarget = body.dataset.gateTarget || 'home.html';
+    const successTarget = body.dataset.gateTarget || '/home';
     const gateSubmitDelay = 450;
     const gateInputs = gateForm.querySelectorAll('input');
     const loadingInputBackground = window.getComputedStyle(document.documentElement).getPropertyValue('--luxury-gold-hover').trim();

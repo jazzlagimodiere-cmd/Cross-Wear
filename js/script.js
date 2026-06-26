@@ -5,7 +5,7 @@ if (searchForm) {
     const searchMessage = document.querySelector('.search-message');
 
     const searchableItems = [
-        { title: 'Home', url: 'index.html', keywords: ['home', 'logo', 'i am cross wear'] }
+        { title: 'Home', url: '/home', keywords: ['home', 'logo', 'i am cross wear'] }
     ];
 
     searchForm.addEventListener('submit', (event) => {
@@ -157,6 +157,18 @@ const closeSignaturePreviews = () => {
     signaturePreviewButtons.forEach((button) => setSignaturePreviewExpanded(button, false));
 };
 
+const toggleSignaturePreviewExpanded = (button) => {
+    const isExpanded = button.classList.contains('is-enlarged');
+
+    closeSignaturePreviews();
+
+    if (!isExpanded) {
+        setSignaturePreviewExpanded(button, true);
+    }
+};
+
+const keyboardHandledSignaturePreviewButtons = new WeakSet();
+
 signaturePreviewButtons.forEach((button) => {
     const previewImage = button.querySelector('img');
     const selectedPreviewSrc = previewImage?.currentSrc || previewImage?.src;
@@ -249,21 +261,33 @@ signaturePreviewButtons.forEach((button) => {
     button.addEventListener('pointercancel', endSignaturePreviewInteraction);
     button.addEventListener('lostpointercapture', endSignaturePreviewInteraction);
 
+    button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        keyboardHandledSignaturePreviewButtons.add(button);
+        window.setTimeout(() => keyboardHandledSignaturePreviewButtons.delete(button), 100);
+        toggleSignaturePreviewExpanded(button);
+    });
+
     button.addEventListener('click', (event) => {
         event.stopPropagation();
 
-        if (!canHoverPreview) {
+        if (keyboardHandledSignaturePreviewButtons.has(button)) {
+            keyboardHandledSignaturePreviewButtons.delete(button);
             event.preventDefault();
             return;
         }
 
-        const isExpanded = button.classList.contains('is-enlarged');
-
-        closeSignaturePreviews();
-
-        if (!isExpanded) {
-            setSignaturePreviewExpanded(button, true);
+        if (!canHoverPreview && event.detail !== 0) {
+            event.preventDefault();
+            return;
         }
+
+        toggleSignaturePreviewExpanded(button);
     });
 });
 

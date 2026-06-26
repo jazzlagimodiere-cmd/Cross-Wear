@@ -703,6 +703,23 @@ body.about-background main.about-page {
     line-height: 1.7;
 }
 
+.legal-section a {
+    color: var(--luxury-clean-gold);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+}
+
+.legal-section a:hover,
+.legal-section a:focus-visible {
+    color: var(--luxury-clean-gold-soft);
+    outline: none;
+    background-size: 100% 2px;
+}
+
 .about-page {
     display: grid;
     gap: clamp(48px, 6vw, 82px);
@@ -1922,6 +1939,13 @@ body.about-background .about-hero {
     outline: none;
     transform: translateY(-1px);
     transition: background-color 0.4s var(--luxury-hover-in-ease), background-position 0.4s var(--luxury-hover-in-ease), transform 0.4s var(--luxury-hover-in-ease);
+}
+
+.coming-soon-preview-image:focus-visible,
+.signature-product-media:focus-visible {
+    border-color: rgba(255, 228, 154, 0.58);
+    outline: 2px solid rgba(255, 228, 154, 0.58);
+    outline-offset: 6px;
 }
 
 .cart-checkout:disabled,

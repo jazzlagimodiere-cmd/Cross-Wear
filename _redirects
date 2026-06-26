@@ -1,0 +1,16 @@
+/index.html / 301
+/home.html /home 301
+/pages/about.html /about 301
+/pages/contact.html /contact 301
+/pages/terms.html /terms 301
+/pages/privacy.html /privacy 301
+/pages/refunds.html /refunds 301
+/pages/shipping.html /shipping 301
+
+/home /home.html 200
+/about /pages/about.html 200
+/contact /pages/contact.html 200
+/terms /pages/terms.html 200
+/privacy /pages/privacy.html 200
+/refunds /pages/refunds.html 200
+/shipping /pages/shipping.html 200

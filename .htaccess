@@ -1,0 +1,19 @@
+Options -MultiViews
+RewriteEngine On
+
+RewriteRule ^index\.html$ / [R=301,L]
+RewriteRule ^home\.html$ /home [R=301,L]
+RewriteRule ^pages/about\.html$ /about [R=301,L]
+RewriteRule ^pages/contact\.html$ /contact [R=301,L]
+RewriteRule ^pages/terms\.html$ /terms [R=301,L]
+RewriteRule ^pages/privacy\.html$ /privacy [R=301,L]
+RewriteRule ^pages/refunds\.html$ /refunds [R=301,L]
+RewriteRule ^pages/shipping\.html$ /shipping [R=301,L]
+
+RewriteRule ^home/?$ home.html [L]
+RewriteRule ^about/?$ pages/about.html [L]
+RewriteRule ^contact/?$ pages/contact.html [L]
+RewriteRule ^terms/?$ pages/terms.html [L]
+RewriteRule ^privacy/?$ pages/privacy.html [L]
+RewriteRule ^refunds/?$ pages/refunds.html [L]
+RewriteRule ^shipping/?$ pages/shipping.html [L]
