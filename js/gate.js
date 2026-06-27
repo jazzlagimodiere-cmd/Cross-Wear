@@ -14,8 +14,10 @@ const cleanPagePaths = new Map([
     ['/pages/shipping.html', '/shipping']
 ]);
 
+const localDevelopmentHosts = ['localhost', '127.0.0.1', '::1'];
+
 const cleanCurrentAddress = () => {
-    if (!['http:', 'https:'].includes(window.location.protocol) || !window.history?.replaceState) {
+    if (!['http:', 'https:'].includes(window.location.protocol) || localDevelopmentHosts.includes(window.location.hostname) || !window.history?.replaceState) {
         return;
     }
 
@@ -29,6 +31,57 @@ const cleanCurrentAddress = () => {
 };
 
 cleanCurrentAddress();
+
+const fileBackedRoutes = new Map([
+    ['/', 'index.html'],
+    ['/home', 'home.html'],
+    ['/about', 'pages/about.html'],
+    ['/contact', 'pages/contact.html'],
+    ['/terms', 'pages/terms.html'],
+    ['/privacy', 'pages/privacy.html'],
+    ['/refunds', 'pages/refunds.html'],
+    ['/shipping', 'pages/shipping.html'],
+    ['/sitemap.xml', 'sitemap.xml']
+]);
+
+const usesFileBackedRoutes = () => {
+    return window.location.protocol === 'file:' || localDevelopmentHosts.includes(window.location.hostname);
+};
+
+const getSiteRootUrl = () => {
+    const gateScript = [...document.scripts].find((script) => script.src.endsWith('/js/gate.js'));
+    return gateScript ? new URL('../', gateScript.src) : new URL('./', document.baseURI);
+};
+
+const resolveRouteForCurrentServer = (route) => {
+    if (!usesFileBackedRoutes() || !route.startsWith('/')) {
+        return route;
+    }
+
+    const hashIndex = route.indexOf('#');
+    const routeWithoutHash = hashIndex === -1 ? route : route.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? '' : route.slice(hashIndex);
+    const queryIndex = routeWithoutHash.indexOf('?');
+    const path = queryIndex === -1 ? routeWithoutHash : routeWithoutHash.slice(0, queryIndex);
+    const query = queryIndex === -1 ? '' : routeWithoutHash.slice(queryIndex);
+    const filePath = fileBackedRoutes.get(path);
+
+    return filePath ? new URL(`${filePath}${query}${hash}`, getSiteRootUrl()).href : route;
+};
+
+const hydrateLocalNavigation = () => {
+    if (!usesFileBackedRoutes()) {
+        return;
+    }
+
+    document.querySelectorAll('a[href^="/"]').forEach((link) => {
+        link.href = resolveRouteForCurrentServer(link.getAttribute('href'));
+    });
+
+    document.querySelectorAll('form[action^="/"]').forEach((form) => {
+        form.action = resolveRouteForCurrentServer(form.getAttribute('action'));
+    });
+};
 
 const contactAddressKey = 23;
 const contactAddressCodes = [126, 121, 113, 120, 87, 125, 114, 100, 98, 100, 116, 101, 120, 100, 100, 96, 114, 118, 101, 57, 116, 118];
@@ -67,9 +120,10 @@ const savePreviewAccess = () => {
 const body = document.body;
 
 hydrateContactLinks();
+hydrateLocalNavigation();
 
 if (body.classList.contains('auth-required') && !hasPreviewAccess()) {
-    const loginPage = body.dataset.loginPage || '/';
+    const loginPage = resolveRouteForCurrentServer(body.dataset.loginPage || '/');
     window.location.replace(loginPage);
 }
 
@@ -289,7 +343,7 @@ if (previewImageButton) {
 }
 
 if (gateForm) {
-    const successTarget = body.dataset.gateTarget || '/home';
+    const successTarget = resolveRouteForCurrentServer(body.dataset.gateTarget || '/home');
     const gateSubmitDelay = 450;
     const gateInputs = gateForm.querySelectorAll('input');
     const loadingInputBackground = window.getComputedStyle(document.documentElement).getPropertyValue('--luxury-gold-hover').trim();
