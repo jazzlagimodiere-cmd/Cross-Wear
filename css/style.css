@@ -2246,7 +2246,7 @@ body.about-background .about-hero {
         height: auto;
         aspect-ratio: auto;
         justify-self: center;
-        touch-action: none;
+        touch-action: manipulation;
         user-select: none;
         -webkit-touch-callout: none;
         -webkit-user-select: none;

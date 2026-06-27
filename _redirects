@@ -6,6 +6,8 @@
 /pages/privacy.html /privacy 301
 /pages/refunds.html /refunds 301
 /pages/shipping.html /shipping 301
+/pages/sitemap.html /sitemap.xml 301
+/sitemap /sitemap.xml 301
 
 /home /home.html 200
 /about /pages/about.html 200

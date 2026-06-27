@@ -57,8 +57,6 @@ const availabilityUpdaters = [];
 const productGalleries = new Map();
 let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
-const previewTapMoveThreshold = 8;
-let activeSignaturePreviewInteraction = null;
 
 const preloadImage = (src) => {
     const image = new Image();
@@ -85,35 +83,9 @@ const preloadImageAfterLoad = (src) => {
     window.addEventListener('load', preloadWhenIdle, { once: true });
 };
 
-const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
-
-const hasMovedPastTapThreshold = (event, startPoint) => {
-    return Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y) > previewTapMoveThreshold;
-};
-
-const getCssNumber = (element, propertyName, fallback = 0) => {
-    const value = Number.parseFloat(window.getComputedStyle(element).getPropertyValue(propertyName));
-    return Number.isFinite(value) ? value : fallback;
-};
-
 const resetSignaturePreviewPan = (button) => {
     button.style.setProperty('--signature-preview-pan-x', '0px');
     button.style.setProperty('--signature-preview-pan-y', '0px');
-};
-
-const updateSignaturePreviewPan = (button, event, startPoint) => {
-    const previewScale = getCssNumber(button, '--signature-preview-scale', 1);
-    const previewWidth = getCssNumber(button, '--signature-preview-width', window.innerWidth);
-    const previewHeight = getCssNumber(button, '--signature-preview-height', window.innerHeight);
-    const visibleWidth = Math.min(window.innerWidth, previewWidth);
-    const visibleHeight = Math.min(window.innerHeight, previewHeight);
-    const maxPanX = Math.max(0, ((previewWidth * previewScale) - visibleWidth) / 2);
-    const maxPanY = Math.max(0, ((previewHeight * previewScale) - visibleHeight) / 2);
-    const panX = clampNumber(event.clientX - startPoint.x, -maxPanX, maxPanX);
-    const panY = clampNumber(event.clientY - startPoint.y, -maxPanY, maxPanY);
-
-    button.style.setProperty('--signature-preview-pan-x', `${panX}px`);
-    button.style.setProperty('--signature-preview-pan-y', `${panY}px`);
 };
 
 const updateSignaturePreviewPosition = (button) => {
@@ -197,70 +169,6 @@ signaturePreviewButtons.forEach((button) => {
         }
     });
 
-    button.addEventListener('pointerdown', (event) => {
-        if (canHoverPreview || event.pointerType === 'mouse') {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        const wasExpanded = button.classList.contains('is-enlarged');
-
-        if (!wasExpanded) {
-            closeSignaturePreviews();
-            resetSignaturePreviewPan(button);
-            setSignaturePreviewExpanded(button, true);
-        }
-
-        activeSignaturePreviewInteraction = {
-            button,
-            pointerId: event.pointerId,
-            wasExpanded,
-            hasMoved: false,
-            startPoint: {
-                x: event.clientX,
-                y: event.clientY
-            }
-        };
-
-        try {
-            button.setPointerCapture(event.pointerId);
-        } catch (error) {}
-    });
-
-    button.addEventListener('pointermove', (event) => {
-        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
-            return;
-        }
-
-        event.preventDefault();
-        activeSignaturePreviewInteraction.hasMoved = activeSignaturePreviewInteraction.hasMoved || hasMovedPastTapThreshold(event, activeSignaturePreviewInteraction.startPoint);
-        updateSignaturePreviewPan(button, event, activeSignaturePreviewInteraction.startPoint);
-    });
-
-    const endSignaturePreviewInteraction = (event, shouldHandleTap = false) => {
-        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        const interaction = activeSignaturePreviewInteraction;
-        activeSignaturePreviewInteraction = null;
-
-        if (shouldHandleTap && interaction.wasExpanded && !interaction.hasMoved) {
-            setSignaturePreviewExpanded(button, false);
-        }
-
-        try {
-            button.releasePointerCapture(event.pointerId);
-        } catch (error) {}
-    };
-
-    button.addEventListener('pointerup', (event) => endSignaturePreviewInteraction(event, true));
-    button.addEventListener('pointercancel', endSignaturePreviewInteraction);
-    button.addEventListener('lostpointercapture', endSignaturePreviewInteraction);
-
     button.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') {
             return;
@@ -284,6 +192,7 @@ signaturePreviewButtons.forEach((button) => {
 
         if (!canHoverPreview && event.detail !== 0) {
             event.preventDefault();
+            toggleSignaturePreviewExpanded(button);
             return;
         }
 

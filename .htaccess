@@ -9,6 +9,8 @@ RewriteRule ^pages/terms\.html$ /terms [R=301,L]
 RewriteRule ^pages/privacy\.html$ /privacy [R=301,L]
 RewriteRule ^pages/refunds\.html$ /refunds [R=301,L]
 RewriteRule ^pages/shipping\.html$ /shipping [R=301,L]
+RewriteRule ^pages/sitemap\.html$ /sitemap.xml [R=301,L]
+RewriteRule ^sitemap/?$ /sitemap.xml [R=301,L]
 
 RewriteRule ^home/?$ home.html [L]
 RewriteRule ^about/?$ pages/about.html [L]
