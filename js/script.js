@@ -57,6 +57,20 @@ const availabilityUpdaters = [];
 const productGalleries = new Map();
 let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+const signaturePreviewTapMoveThreshold = 8;
+let activeSignaturePreviewInteraction = null;
+const pointerHandledSignaturePreviewButtons = new WeakSet();
+
+const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getCssNumber = (element, propertyName, fallback = 0) => {
+    const value = Number.parseFloat(window.getComputedStyle(element).getPropertyValue(propertyName));
+    return Number.isFinite(value) ? value : fallback;
+};
+
+const hasMovedPastTapThreshold = (event, startPoint) => {
+    return Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y) > signaturePreviewTapMoveThreshold;
+};
 
 const preloadImage = (src) => {
     const image = new Image();
@@ -86,6 +100,28 @@ const preloadImageAfterLoad = (src) => {
 const resetSignaturePreviewPan = (button) => {
     button.style.setProperty('--signature-preview-pan-x', '0px');
     button.style.setProperty('--signature-preview-pan-y', '0px');
+};
+
+const updateSignaturePreviewPan = (event, interaction) => {
+    const { button, startPoint, startPan } = interaction;
+    const computedStyle = window.getComputedStyle(button);
+    const previewScale = getCssNumber(button, '--signature-preview-scale', 1);
+    const previewLeft = getCssNumber(button, '--signature-preview-left', window.innerWidth / 2);
+    const previewTop = getCssNumber(button, '--signature-preview-top', window.innerHeight / 2);
+    const previewWidth = getCssNumber(button, '--signature-preview-width', button.getBoundingClientRect().width);
+    const fallbackRatio = Number.parseFloat(computedStyle.getPropertyValue('--signature-preview-ratio')) || 1;
+    const previewHeight = getCssNumber(button, '--signature-preview-height', previewWidth / fallbackRatio);
+    const scaledPreviewWidth = previewWidth * previewScale;
+    const scaledPreviewHeight = previewHeight * previewScale;
+    const minPanX = Math.min(0, window.innerWidth - previewLeft - (scaledPreviewWidth / 2));
+    const maxPanX = Math.max(0, (scaledPreviewWidth / 2) - previewLeft);
+    const minPanY = Math.min(0, window.innerHeight - previewTop - (scaledPreviewHeight / 2));
+    const maxPanY = Math.max(0, (scaledPreviewHeight / 2) - previewTop);
+    const panX = clampNumber(startPan.x + event.clientX - startPoint.x, minPanX, maxPanX);
+    const panY = clampNumber(startPan.y + event.clientY - startPoint.y, minPanY, maxPanY);
+
+    button.style.setProperty('--signature-preview-pan-x', `${panX}px`);
+    button.style.setProperty('--signature-preview-pan-y', `${panY}px`);
 };
 
 const updateSignaturePreviewPosition = (button) => {
@@ -169,6 +205,75 @@ signaturePreviewButtons.forEach((button) => {
         }
     });
 
+    button.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        const wasExpanded = button.classList.contains('is-enlarged');
+
+        if (!wasExpanded) {
+            resetSignaturePreviewPan(button);
+            setSignaturePreviewExpanded(button, true);
+        }
+
+        activeSignaturePreviewInteraction = {
+            button,
+            pointerId: event.pointerId,
+            wasExpanded,
+            hasMoved: false,
+            startPoint: {
+                x: event.clientX,
+                y: event.clientY
+            },
+            startPan: {
+                x: getCssNumber(button, '--signature-preview-pan-x', 0),
+                y: getCssNumber(button, '--signature-preview-pan-y', 0)
+            }
+        };
+
+        try {
+            button.setPointerCapture(event.pointerId);
+        } catch (error) {}
+    });
+
+    button.addEventListener('pointermove', (event) => {
+        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
+            return;
+        }
+
+        event.preventDefault();
+        activeSignaturePreviewInteraction.hasMoved = activeSignaturePreviewInteraction.hasMoved || hasMovedPastTapThreshold(event, activeSignaturePreviewInteraction.startPoint);
+        updateSignaturePreviewPan(event, activeSignaturePreviewInteraction);
+    });
+
+    const endSignaturePreviewInteraction = (event, shouldHandleTap = false) => {
+        if (!activeSignaturePreviewInteraction || activeSignaturePreviewInteraction.button !== button || activeSignaturePreviewInteraction.pointerId !== event.pointerId) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        const interaction = activeSignaturePreviewInteraction;
+        activeSignaturePreviewInteraction = null;
+        pointerHandledSignaturePreviewButtons.add(button);
+        window.setTimeout(() => pointerHandledSignaturePreviewButtons.delete(button), 100);
+
+        if (shouldHandleTap && interaction.wasExpanded && !interaction.hasMoved) {
+            setSignaturePreviewExpanded(button, false);
+        }
+
+        try {
+            button.releasePointerCapture(event.pointerId);
+        } catch (error) {}
+    };
+
+    button.addEventListener('pointerup', (event) => endSignaturePreviewInteraction(event, true));
+    button.addEventListener('pointercancel', endSignaturePreviewInteraction);
+    button.addEventListener('lostpointercapture', endSignaturePreviewInteraction);
+
     button.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') {
             return;
@@ -183,6 +288,12 @@ signaturePreviewButtons.forEach((button) => {
 
     button.addEventListener('click', (event) => {
         event.stopPropagation();
+
+        if (pointerHandledSignaturePreviewButtons.has(button)) {
+            pointerHandledSignaturePreviewButtons.delete(button);
+            event.preventDefault();
+            return;
+        }
 
         if (keyboardHandledSignaturePreviewButtons.has(button)) {
             keyboardHandledSignaturePreviewButtons.delete(button);
