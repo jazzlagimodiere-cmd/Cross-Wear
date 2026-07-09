@@ -1,5 +1,6 @@
 const previewAccessKey = 'jesusCrossWearPreviewAccess';
 const previewAccessValue = 'granted';
+const previewGateEnabled = false;
 const previewLogin = 'Crosswear';
 const previewPassword = 'Jesus2026';
 
@@ -122,7 +123,7 @@ const body = document.body;
 hydrateContactLinks();
 hydrateLocalNavigation();
 
-if (body.classList.contains('auth-required') && !hasPreviewAccess()) {
+if (previewGateEnabled && body.classList.contains('auth-required') && !hasPreviewAccess()) {
     const loginPage = resolveRouteForCurrentServer(body.dataset.loginPage || '/');
     window.location.replace(loginPage);
 }
@@ -342,7 +343,7 @@ if (previewImageButton) {
     window.addEventListener('scroll', closePreviewOnMobileViewportChange, { passive: true });
 }
 
-if (gateForm) {
+if (previewGateEnabled && gateForm) {
     const successTarget = resolveRouteForCurrentServer(body.dataset.gateTarget || '/home');
     const gateSubmitDelay = 450;
     const gateInputs = gateForm.querySelectorAll('input');
