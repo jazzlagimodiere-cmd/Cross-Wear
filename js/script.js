@@ -5,7 +5,7 @@ if (searchForm) {
     const searchMessage = document.querySelector('.search-message');
 
     const searchableItems = [
-        { title: 'Home', url: '/home', keywords: ['home', 'logo', 'i am cross wear'] }
+        { title: 'Home', url: '/', keywords: ['home', 'logo', 'i am cross wear'] }
     ];
 
     searchForm.addEventListener('submit', (event) => {
