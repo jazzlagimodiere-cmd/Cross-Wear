@@ -578,7 +578,7 @@ body.about-background .about-hero {
     background-repeat: no-repeat;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.45), 0 10px 24px rgba(17, 17, 17, 0.16);
     font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
-    font-size: 8.25px;
+    font-size: 10.75px;
     font-weight: 600;
     letter-spacing: 0.2em;
     line-height: 1;
@@ -1262,7 +1262,7 @@ body.about-background .about-hero {
     color: var(--luxury-button-text);
     cursor: pointer;
     font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
-    font-size: 8.25px;
+    font-size: 10.75px;
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -1277,6 +1277,7 @@ body.about-background .about-hero {
 .order-submit {
     width: 75%;
     justify-self: center;
+    margin-inline: auto;
     padding: 10.5px 30px;
 }
 
@@ -1373,11 +1374,13 @@ body.about-background .about-hero {
 
 .order-grid label {
     display: grid;
+    justify-items: center;
     gap: 6px;
     color: #8f641c;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.3px;
+    text-align: center;
     text-transform: uppercase;
 }
 
@@ -1400,6 +1403,7 @@ body.about-background .about-hero {
     display: inline-grid;
     grid-template-columns: repeat(2, minmax(42px, 1fr));
     gap: 8px;
+    justify-self: center;
     width: max-content;
     max-width: 100%;
 }
@@ -1447,7 +1451,8 @@ body.about-background .about-hero {
     display: grid;
     grid-template-columns: 32px minmax(42px, auto) 32px;
     align-items: center;
-    justify-content: start;
+    justify-content: center;
+    justify-self: center;
     gap: 12px;
     width: max-content;
     min-height: 38px;
@@ -1730,19 +1735,22 @@ body.about-background .about-hero {
     transition: color 0.4s var(--luxury-hover-in-ease), transform 0.4s var(--luxury-hover-in-ease);
 }
 
-.cart-modal {
+.cart-modal,
+.preorder-confirm-modal {
     width: min(520px, calc(100vw - 28px));
     border: 0;
     padding: 0;
     background: transparent;
 }
 
-.cart-modal::backdrop {
+.cart-modal::backdrop,
+.preorder-confirm-modal::backdrop {
     background: rgba(32, 24, 12, 0.34);
     backdrop-filter: blur(3px);
 }
 
-.cart-modal-panel {
+.cart-modal-panel,
+.preorder-confirm-panel {
     border: 1px solid rgba(143, 100, 28, 0.34);
     border-radius: 8px;
     background:
@@ -1753,7 +1761,8 @@ body.about-background .about-hero {
     padding: 22px;
 }
 
-.cart-modal-header {
+.cart-modal-header,
+.preorder-confirm-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1761,14 +1770,16 @@ body.about-background .about-hero {
     margin-bottom: 18px;
 }
 
-.cart-modal-header h2 {
+.cart-modal-header h2,
+.preorder-confirm-header h2 {
     margin: 0;
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 36px;
     font-weight: 500;
 }
 
-.cart-close {
+.cart-close,
+.preorder-confirm-close {
     border: none;
     border-radius: var(--luxury-button-radius);
     background: var(--luxury-button-bg);
@@ -1786,9 +1797,45 @@ body.about-background .about-hero {
 }
 
 .cart-close:hover,
-.cart-close:focus-visible {
+.cart-close:focus-visible,
+.preorder-confirm-close:hover,
+.preorder-confirm-close:focus-visible {
     outline: none;
     transform: translateY(-1px);
+}
+
+.preorder-confirm-copy,
+.preorder-confirm-summary {
+    margin: 0;
+    color: #4d402a;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.preorder-confirm-copy {
+    color: #21180c;
+    font-size: 15px;
+}
+
+.preorder-confirm-summary {
+    margin-top: 12px;
+    color: #8f641c;
+    font-weight: 700;
+}
+
+.preorder-confirm-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.preorder-confirm-back,
+.preorder-confirm-continue {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 .cart-items {
@@ -1930,6 +1977,9 @@ body.about-background .about-hero {
 .order-toggle,
 .order-submit,
 .order-close,
+.preorder-confirm-close,
+.preorder-confirm-back,
+.preorder-confirm-continue,
 .mockup-notice-okay,
 .thank-you-action,
 .cart-close,
@@ -1961,6 +2011,12 @@ body.about-background .about-hero {
 .order-submit:focus-visible,
 .order-close:hover,
 .order-close:focus-visible,
+.preorder-confirm-close:hover,
+.preorder-confirm-close:focus-visible,
+.preorder-confirm-back:hover,
+.preorder-confirm-back:focus-visible,
+.preorder-confirm-continue:hover,
+.preorder-confirm-continue:focus-visible,
 .mockup-notice-okay:hover,
 .mockup-notice-okay:focus-visible,
 .thank-you-action:hover,
@@ -1989,6 +2045,9 @@ body.about-background .about-hero {
 
 .order-submit,
 .order-close,
+.preorder-confirm-close,
+.preorder-confirm-back,
+.preorder-confirm-continue,
 .mockup-notice-okay,
 .thank-you-action,
 .cart-close,
@@ -2001,13 +2060,18 @@ body.about-background .about-hero {
     justify-content: center;
     box-sizing: border-box;
     min-height: 33px;
-    font-size: 8.25px;
+    font-size: 10.75px;
     font-weight: 600;
     letter-spacing: 0.2em;
     line-height: 1;
     padding: 9.75px 23.25px;
     text-align: center;
     text-transform: uppercase;
+}
+
+.order-submit {
+    display: flex;
+    margin-inline: auto;
 }
 
 .small-action-button {
@@ -2021,7 +2085,8 @@ body.about-background .about-hero {
 }
 
 .cart-checkout:disabled,
-.cart-clear:disabled {
+.cart-clear:disabled,
+.preorder-confirm-continue:disabled {
     cursor: not-allowed;
     filter: grayscale(0.35);
     opacity: 0.55;
@@ -2257,6 +2322,12 @@ body.about-background .about-hero {
 
     .signature-action-row {
         justify-content: center;
+    }
+
+    .product-action-row {
+        display: grid;
+        justify-items: center;
+        width: 100%;
     }
 
     .site-footer {

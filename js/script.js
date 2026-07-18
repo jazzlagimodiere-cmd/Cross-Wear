@@ -45,6 +45,11 @@ const cartTotal = document.querySelector('.cart-total');
 const cartCheckout = document.querySelector('.cart-checkout');
 const cartClear = document.querySelector('.cart-clear');
 const cartModalNote = document.querySelector('.cart-modal-note');
+const preorderConfirmModal = document.querySelector('#preorder-confirm-modal');
+const preorderConfirmClose = document.querySelector('.preorder-confirm-close');
+const preorderConfirmBack = document.querySelector('.preorder-confirm-back');
+const preorderConfirmContinue = document.querySelector('.preorder-confirm-continue');
+const preorderConfirmSummary = document.querySelector('.preorder-confirm-summary');
 const imageViewerModal = document.querySelector('#image-viewer-modal');
 const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
@@ -926,55 +931,106 @@ if (cartClear) {
     });
 }
 
-if (cartCheckout) {
-    cartCheckout.addEventListener('click', async () => {
-        if (!cartItems.length) {
-            if (cartModalNote) {
-                cartModalNote.textContent = 'Your cart is empty.';
-            }
-            return;
-        }
+const closePreorderConfirmModal = ({ reopenCart = false } = {}) => {
+    if (preorderConfirmModal?.open && typeof preorderConfirmModal.close === 'function') {
+        preorderConfirmModal.close();
+    } else {
+        preorderConfirmModal?.removeAttribute('open');
+    }
 
-        if (window.location.protocol === 'file:') {
-            if (cartModalNote) {
-                cartModalNote.textContent = 'Stripe checkout needs the Netlify dev server or live website.';
-            }
-            return;
-        }
+    if (reopenCart) {
+        window.setTimeout(() => openCartModal(getCartSummaryText()), 0);
+    }
+};
 
-        cartCheckout.disabled = true;
-
+const openPreorderConfirmModal = () => {
+    if (!cartItems.length) {
         if (cartModalNote) {
-            cartModalNote.textContent = 'Opening secure Stripe checkout.';
+            cartModalNote.textContent = 'Your cart is empty.';
+        }
+        return;
+    }
+
+    if (!preorderConfirmModal) {
+        return;
+    }
+
+    if (preorderConfirmSummary) {
+        preorderConfirmSummary.textContent = getCartSummaryText();
+    }
+
+    if (preorderConfirmContinue) {
+        preorderConfirmContinue.disabled = false;
+    }
+
+    if (cartModal?.open && typeof cartModal.close === 'function') {
+        cartModal.close();
+    } else {
+        cartModal?.removeAttribute('open');
+    }
+
+    if (typeof preorderConfirmModal.showModal === 'function' && !preorderConfirmModal.open) {
+        preorderConfirmModal.showModal();
+    } else {
+        preorderConfirmModal.setAttribute('open', '');
+    }
+
+    preorderConfirmContinue?.focus();
+};
+
+const startStripeCheckout = async () => {
+    if (!cartItems.length) {
+        closePreorderConfirmModal({ reopenCart: true });
+        return;
+    }
+
+    if (preorderConfirmContinue) {
+        preorderConfirmContinue.disabled = true;
+    }
+
+    if (window.location.protocol === 'file:') {
+        if (preorderConfirmContinue) {
+            preorderConfirmContinue.disabled = false;
         }
 
-        try {
-            const response = await fetch(checkoutSessionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    items: cartItems.map(({ name, size, quantity }) => ({ name, size, quantity }))
-                })
-            });
+        return;
+    }
 
-            const checkoutSession = await response.json();
+    try {
+        const response = await fetch(checkoutSessionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                items: cartItems.map(({ name, size, quantity }) => ({ name, size, quantity }))
+            })
+        });
 
-            if (!response.ok || !checkoutSession.url) {
-                throw new Error('Secure checkout is almost ready. Please check back shortly.');
-            }
+        const checkoutSession = await response.json();
 
-            window.location.href = checkoutSession.url;
-        } catch (error) {
-            if (cartModalNote) {
-                cartModalNote.textContent = error.message || 'Secure checkout is almost ready. Please check back shortly.';
-            }
-
-            cartCheckout.disabled = false;
+        if (!response.ok || !checkoutSession.url) {
+            throw new Error('Secure checkout is almost ready. Please check back shortly.');
         }
-    });
-}
+
+        window.location.href = checkoutSession.url;
+    } catch (error) {
+        if (preorderConfirmContinue) {
+            preorderConfirmContinue.disabled = false;
+        }
+    }
+};
+
+cartCheckout?.addEventListener('click', openPreorderConfirmModal);
+preorderConfirmContinue?.addEventListener('click', startStripeCheckout);
+preorderConfirmClose?.addEventListener('click', () => closePreorderConfirmModal({ reopenCart: true }));
+preorderConfirmBack?.addEventListener('click', () => closePreorderConfirmModal({ reopenCart: true }));
+
+preorderConfirmModal?.addEventListener('click', (event) => {
+    if (event.target === preorderConfirmModal) {
+        closePreorderConfirmModal({ reopenCart: true });
+    }
+});
 
 productCards.forEach((productCard) => {
     const orderToggle = productCard.querySelector('.order-toggle');
