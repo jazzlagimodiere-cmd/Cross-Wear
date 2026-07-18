@@ -869,13 +869,13 @@ if (cartCheckout) {
             const checkoutSession = await response.json();
 
             if (!response.ok || !checkoutSession.url) {
-                throw new Error(checkoutSession.error || 'Unable to start checkout.');
+                throw new Error('Secure checkout is almost ready. Please check back shortly.');
             }
 
             window.location.href = checkoutSession.url;
         } catch (error) {
             if (cartModalNote) {
-                cartModalNote.textContent = error.message || 'Unable to start checkout. Please try again.';
+                cartModalNote.textContent = error.message || 'Secure checkout is almost ready. Please check back shortly.';
             }
 
             cartCheckout.disabled = false;

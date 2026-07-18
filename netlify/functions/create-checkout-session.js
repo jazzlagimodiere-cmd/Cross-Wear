@@ -94,7 +94,7 @@ exports.handler = async (event) => {
   }
 
   if (!stripe) {
-    return jsonResponse(500, { error: 'Stripe is not configured.' });
+    return jsonResponse(500, { error: 'Checkout is temporarily unavailable.' });
   }
 
   let payload;
