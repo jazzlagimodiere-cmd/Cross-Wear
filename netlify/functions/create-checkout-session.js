@@ -4,7 +4,36 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 const currency = process.env.STRIPE_CURRENCY || 'cad';
-const siteUrl = (process.env.SITE_URL || 'http://localhost:8888').replace(/\/$/, '');
+const defaultSiteUrl = 'http://localhost:8888';
+const configuredSiteUrl = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+
+const isLocalSiteUrl = (url) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url);
+
+const getHeader = (headers, headerName) => {
+  const normalizedHeaderName = headerName.toLowerCase();
+  const headerKey = Object.keys(headers).find((key) => key.toLowerCase() === normalizedHeaderName);
+
+  return headerKey ? headers[headerKey] : '';
+};
+
+const resolveSiteUrl = (event) => {
+  const headers = event.headers || {};
+  const forwardedHost = String(getHeader(headers, 'x-forwarded-host') || '');
+  const host = String(forwardedHost || getHeader(headers, 'host') || '').split(',')[0].trim();
+  const forwardedProto = String(getHeader(headers, 'x-forwarded-proto') || '').split(',')[0].trim();
+  const protocol = forwardedProto || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
+  const requestSiteUrl = host ? `${protocol}://${host}`.replace(/\/+$/, '') : '';
+
+  if (configuredSiteUrl && !isLocalSiteUrl(configuredSiteUrl)) {
+    return configuredSiteUrl;
+  }
+
+  if (requestSiteUrl && !isLocalSiteUrl(requestSiteUrl)) {
+    return requestSiteUrl;
+  }
+
+  return configuredSiteUrl || requestSiteUrl || defaultSiteUrl;
+};
 
 const products = {
   'I AM': {
@@ -111,13 +140,15 @@ exports.handler = async (event) => {
     return jsonResponse(400, { error: 'No valid preorder items were provided.' });
   }
 
+  const checkoutSiteUrl = resolveSiteUrl(event);
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: lineItems,
-      success_url: `${siteUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/`,
+      success_url: `${checkoutSiteUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${checkoutSiteUrl}/`,
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['CA']
