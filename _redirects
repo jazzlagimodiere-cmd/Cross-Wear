@@ -7,6 +7,7 @@
 /pages/privacy.html /privacy 301
 /pages/refunds.html /refunds 301
 /pages/shipping.html /shipping 301
+/pages/thank-you.html /thank-you 301
 /pages/sitemap.html /sitemap.xml 301
 /sitemap /sitemap.xml 301
 
@@ -16,3 +17,4 @@
 /privacy /pages/privacy.html 200
 /refunds /pages/refunds.html 200
 /shipping /pages/shipping.html 200
+/thank-you /pages/thank-you.html 200
