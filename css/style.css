@@ -566,7 +566,7 @@ body.about-background .about-hero {
     align-items: center;
     justify-content: center;
     min-width: 174px;
-    min-height: 42px;
+    min-height: 33px;
     box-sizing: border-box;
     border: 1px solid rgba(255, 228, 154, 0.22);
     border-radius: var(--luxury-button-radius);
@@ -578,11 +578,11 @@ body.about-background .about-hero {
     background-repeat: no-repeat;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.45), 0 10px 24px rgba(17, 17, 17, 0.16);
     font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    font-size: 8.25px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
     line-height: 1;
-    padding: 14px 20px;
+    padding: 9.75px 23.25px;
     text-decoration: none;
     text-transform: uppercase;
     transition: background-color 0.4s var(--luxury-hover-out-ease), background-position 0.4s var(--luxury-hover-out-ease), transform 0.4s var(--luxury-hover-out-ease);
@@ -598,11 +598,6 @@ body.about-background .about-hero {
     transform: translateY(-1px);
     transition: background-color 0.4s var(--luxury-hover-in-ease), background-position 0.4s var(--luxury-hover-in-ease), transform 0.4s var(--luxury-hover-in-ease);
     -webkit-text-fill-color: #111111;
-}
-
-.thank-you-action-secondary {
-    background-image: none;
-    background-color: rgba(0, 0, 0, 0.2);
 }
 
 .thank-you-details {
@@ -1401,6 +1396,130 @@ body.about-background .about-hero {
     opacity: 0.68;
 }
 
+.size-selector {
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(42px, 1fr));
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+}
+
+.size-selector-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    min-height: 38px;
+    border: 1px solid rgba(143, 100, 28, 0.32);
+    border-radius: var(--luxury-button-radius);
+    background: rgba(255, 255, 255, 0.5);
+    color: #8f641c;
+    cursor: pointer;
+    font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    padding: 0 12px;
+    text-transform: uppercase;
+    transition: background 300ms ease, border-color 300ms ease, color 300ms ease, transform 300ms ease;
+    -webkit-text-fill-color: #8f641c;
+}
+
+.size-selector-button:hover,
+.size-selector-button:focus-visible {
+    border-color: rgba(143, 100, 28, 0.52);
+    color: #21180c;
+    outline: none;
+    transform: translateY(-1px);
+    -webkit-text-fill-color: #21180c;
+}
+
+.size-selector-button.is-selected {
+    border-color: rgba(255, 228, 154, 0.38);
+    background: var(--luxury-graphite-bg);
+    color: var(--luxury-clean-gold);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 18px rgba(17, 17, 17, 0.14);
+    -webkit-text-fill-color: var(--luxury-clean-gold);
+}
+
+.quantity-stepper {
+    display: grid;
+    grid-template-columns: 32px minmax(42px, auto) 32px;
+    align-items: center;
+    justify-content: start;
+    gap: 12px;
+    width: max-content;
+    min-height: 38px;
+    box-sizing: border-box;
+}
+
+.quantity-stepper-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: #8f641c;
+    cursor: pointer;
+    font-size: 0;
+    line-height: 0;
+    position: relative;
+    transition: background 300ms ease, color 300ms ease, transform 300ms ease;
+}
+
+.quantity-stepper-button::before,
+.quantity-stepper-button::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.quantity-stepper-button[data-quantity-action="increase"]::after {
+    transform: rotate(90deg);
+}
+
+.quantity-stepper-button:hover,
+.quantity-stepper-button:focus-visible {
+    color: #21180c;
+    outline: none;
+}
+
+.quantity-stepper-button:active {
+    transform: scale(0.96);
+}
+
+.quantity-stepper-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+    transform: none;
+}
+
+.quantity-stepper-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    color: #21180c;
+    font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-align: center;
+}
+
+.quantity-stepper.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+}
+
 .stock-note,
 .order-message {
     color: #4d402a;
@@ -1811,6 +1930,8 @@ body.about-background .about-hero {
 .order-toggle,
 .order-submit,
 .order-close,
+.mockup-notice-okay,
+.thank-you-action,
 .cart-close,
 .cart-remove,
 .small-action-button,
@@ -1840,6 +1961,10 @@ body.about-background .about-hero {
 .order-submit:focus-visible,
 .order-close:hover,
 .order-close:focus-visible,
+.mockup-notice-okay:hover,
+.mockup-notice-okay:focus-visible,
+.thank-you-action:hover,
+.thank-you-action:focus-visible,
 .cart-close:hover,
 .cart-close:focus-visible,
 .cart-remove:hover,
@@ -1860,6 +1985,33 @@ body.about-background .about-hero {
     outline: none;
     transform: translateY(-1px);
     transition: background-color 0.4s var(--luxury-hover-in-ease), background-position 0.4s var(--luxury-hover-in-ease), transform 0.4s var(--luxury-hover-in-ease);
+}
+
+.order-submit,
+.order-close,
+.mockup-notice-okay,
+.thank-you-action,
+.cart-close,
+.cart-remove,
+.small-action-button,
+.cart-checkout,
+.cart-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 33px;
+    font-size: 8.25px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    line-height: 1;
+    padding: 9.75px 23.25px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.small-action-button {
+    height: auto;
 }
 
 .signature-product-media:focus-visible {

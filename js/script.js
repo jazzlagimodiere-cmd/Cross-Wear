@@ -652,6 +652,83 @@ const updateAllOrderAvailability = () => {
     availabilityUpdaters.forEach((updateAvailability) => updateAvailability());
 };
 
+const getSizeSelector = (sizeSelect) => {
+    let selector = sizeSelect.nextElementSibling?.classList.contains('size-selector') ? sizeSelect.nextElementSibling : null;
+
+    if (!selector) {
+        selector = document.createElement('div');
+        selector.className = 'size-selector';
+        selector.setAttribute('role', 'radiogroup');
+        selector.setAttribute('aria-label', 'Size');
+
+        [...sizeSelect.options].forEach((option) => {
+            const button = document.createElement('button');
+            button.className = 'size-selector-button';
+            button.type = 'button';
+            button.dataset.sizeValue = option.value || option.textContent.trim();
+            button.setAttribute('role', 'radio');
+            button.textContent = option.textContent.trim();
+            selector.append(button);
+        });
+
+        sizeSelect.after(selector);
+    }
+
+    sizeSelect.hidden = true;
+    return selector;
+};
+
+const updateSizeSelector = (sizeSelect) => {
+    const selector = getSizeSelector(sizeSelect);
+
+    selector.querySelectorAll('.size-selector-button').forEach((button) => {
+        const isSelected = button.dataset.sizeValue === sizeSelect.value;
+        button.classList.toggle('is-selected', isSelected);
+        button.setAttribute('aria-checked', String(isSelected));
+    });
+};
+
+const getQuantityStepper = (quantitySelect) => {
+    let stepper = quantitySelect.nextElementSibling?.classList.contains('quantity-stepper') ? quantitySelect.nextElementSibling : null;
+
+    if (!stepper) {
+        stepper = document.createElement('div');
+        stepper.className = 'quantity-stepper';
+        stepper.innerHTML = `
+            <button class="quantity-stepper-button" type="button" data-quantity-action="decrease" aria-label="Decrease quantity">-</button>
+            <span class="quantity-stepper-value" aria-live="polite">--</span>
+            <button class="quantity-stepper-button" type="button" data-quantity-action="increase" aria-label="Increase quantity">+</button>
+        `;
+        quantitySelect.after(stepper);
+    }
+
+    quantitySelect.hidden = true;
+    return stepper;
+};
+
+const updateQuantityStepper = (quantitySelect, maxQuantity) => {
+    const stepper = getQuantityStepper(quantitySelect);
+    const currentQuantity = Number(quantitySelect.value) || 0;
+    const decreaseButton = stepper.querySelector('[data-quantity-action="decrease"]');
+    const increaseButton = stepper.querySelector('[data-quantity-action="increase"]');
+    const quantityValue = stepper.querySelector('.quantity-stepper-value');
+
+    quantitySelect.dataset.maxQuantity = String(maxQuantity);
+    stepper.classList.toggle('is-disabled', maxQuantity === 0);
+
+    if (quantityValue) {
+        quantityValue.textContent = currentQuantity > 0 ? String(currentQuantity) : '--';
+    }
+
+    if (decreaseButton) {
+        decreaseButton.disabled = currentQuantity <= 0 || maxQuantity === 0;
+    }
+
+    if (increaseButton) {
+        increaseButton.disabled = currentQuantity >= maxQuantity || maxQuantity === 0;
+    }
+};
+
 const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
     return ({ preserveQuantity = true } = {}) => {
         const quantitySelect = orderPanel.querySelector('select[name="quantity"]');
@@ -676,6 +753,7 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
             quantitySelect.disabled = true;
             orderSubmit.disabled = true;
             stockNote.textContent = 'Sold out for this selection.';
+            updateQuantityStepper(quantitySelect, remainingStock);
             return;
         }
 
@@ -695,6 +773,7 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
         orderSubmit.disabled = false;
         quantitySelect.value = previousQuantity > 0 ? String(Math.min(previousQuantity, remainingStock)) : '';
         stockNote.textContent = `${remainingStock} available for this selection.`;
+        updateQuantityStepper(quantitySelect, remainingStock);
     };
 };
 
@@ -909,13 +988,21 @@ productCards.forEach((productCard) => {
     }
 
     const firstOrderSelect = orderPanel.querySelector('select');
+    const sizeSelect = orderPanel.querySelector('select[name="size"]');
     const orderMessage = orderPanel.querySelector('.order-message');
     const updateAvailability = createOrderAvailabilityUpdater(productCard, orderPanel);
 
     availabilityUpdaters.push(updateAvailability);
 
+    if (sizeSelect) {
+        updateSizeSelector(sizeSelect);
+    }
+
     const openOrderModal = () => {
         updateAvailability({ preserveQuantity: false });
+        if (sizeSelect) {
+            updateSizeSelector(sizeSelect);
+        }
 
         if (orderMessage) {
             orderMessage.textContent = '';
@@ -931,8 +1018,12 @@ productCards.forEach((productCard) => {
             orderModal.setAttribute('open', '');
         }
 
-        if (firstOrderSelect) {
-            firstOrderSelect.focus();
+        const selectedSizeButton = sizeSelect ? getSizeSelector(sizeSelect).querySelector('.size-selector-button.is-selected') : null;
+
+        if (selectedSizeButton) {
+            selectedSizeButton.focus();
+        } else {
+            firstOrderSelect?.focus();
         }
     };
 
@@ -969,12 +1060,54 @@ productCards.forEach((productCard) => {
 
     orderPanel.querySelectorAll('select[name="size"]').forEach((select) => {
         select.addEventListener('change', () => {
+            updateSizeSelector(select);
             updateAvailability({ preserveQuantity: false });
 
             if (orderMessage) {
                 orderMessage.textContent = '';
             }
         });
+    });
+
+    orderPanel.addEventListener('click', (event) => {
+        const sizeButton = event.target.closest('[data-size-value]');
+
+        if (!sizeButton || !orderPanel.contains(sizeButton) || !sizeSelect) {
+            return;
+        }
+
+        if (sizeSelect.value === sizeButton.dataset.sizeValue) {
+            return;
+        }
+
+        sizeSelect.value = sizeButton.dataset.sizeValue;
+        sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    orderPanel.addEventListener('click', (event) => {
+        const quantityButton = event.target.closest('[data-quantity-action]');
+
+        if (!quantityButton || !orderPanel.contains(quantityButton)) {
+            return;
+        }
+
+        const quantitySelect = orderPanel.querySelector('select[name="quantity"]');
+
+        if (!quantitySelect || quantitySelect.disabled) {
+            return;
+        }
+
+        const maxQuantity = Number(quantitySelect.dataset.maxQuantity) || 0;
+        const currentQuantity = Number(quantitySelect.value) || 0;
+        const quantityChange = quantityButton.dataset.quantityAction === 'increase' ? 1 : -1;
+        const nextQuantity = clampNumber(currentQuantity + quantityChange, 0, maxQuantity);
+
+        quantitySelect.value = nextQuantity > 0 ? String(nextQuantity) : '';
+        updateQuantityStepper(quantitySelect, maxQuantity);
+
+        if (orderMessage) {
+            orderMessage.textContent = '';
+        }
     });
 
     orderPanel.addEventListener('submit', (event) => {
