@@ -698,8 +698,10 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
     };
 };
 
+const getCartItemCount = () => cartItems.reduce((total, item) => total + item.quantity, 0);
+
 const updateCartButton = () => {
-    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const itemCount = getCartItemCount();
 
     if (cartCount && cartButton) {
         cartCount.textContent = String(itemCount);
@@ -712,7 +714,7 @@ const updateCartTitle = () => {
         return;
     }
 
-    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const itemCount = getCartItemCount();
     cartTitle.textContent = itemCount === 1 ? 'Your Item' : 'Your Items';
 };
 
@@ -721,6 +723,7 @@ const renderCart = () => {
         return;
     }
 
+    updateCartButton();
     updateCartTitle();
 
     if (cartCheckout) {
