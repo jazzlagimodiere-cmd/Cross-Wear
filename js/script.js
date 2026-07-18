@@ -700,6 +700,17 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
 
 const getCartItemCount = () => cartItems.reduce((total, item) => total + item.quantity, 0);
 
+const getCartSummaryText = () => {
+    const itemCount = getCartItemCount();
+
+    if (!itemCount) {
+        return 'Your cart is empty.';
+    }
+
+    const itemSummary = cartItems.map((item) => `${item.name} size ${item.size} x ${item.quantity}`).join('; ');
+    return `${itemCount} item${itemCount === 1 ? '' : 's'} in your preorder: ${itemSummary}.`;
+};
+
 const updateCartButton = () => {
     const itemCount = getCartItemCount();
 
@@ -765,7 +776,7 @@ const openCartModal = (noteText) => {
     renderCart();
 
     if (cartModalNote) {
-        cartModalNote.textContent = noteText ?? (cartItems.length ? 'Review your preorder items.' : 'Your cart is empty.');
+        cartModalNote.textContent = noteText ?? getCartSummaryText();
     }
 
     if (typeof cartModal.showModal === 'function' && !cartModal.open) {
@@ -818,7 +829,7 @@ if (cartItemsContainer) {
         updateAllOrderAvailability();
 
         if (cartModalNote) {
-            cartModalNote.textContent = cartItems.length ? '1 item removed from your cart.' : 'Your cart is empty.';
+            cartModalNote.textContent = getCartSummaryText();
         }
     });
 }
@@ -1011,6 +1022,6 @@ productCards.forEach((productCard) => {
 
         orderMessage.textContent = `${quantity} item${quantity === 1 ? '' : 's'} added to your preorder.`;
         closeOrderModal();
-        window.setTimeout(() => openCartModal(orderMessage.textContent), 0);
+        window.setTimeout(() => openCartModal(getCartSummaryText()), 0);
     });
 });
