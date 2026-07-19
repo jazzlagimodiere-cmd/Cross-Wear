@@ -1598,6 +1598,134 @@ body.about-background .about-hero {
     margin: 10px 0 0;
 }
 
+.klaviyo-signup-modal {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    width: min(480px, calc(100vw - 32px));
+    max-width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    transform: translate(-50%, -50%);
+}
+
+.klaviyo-signup-modal::backdrop {
+    background: rgba(32, 24, 12, 0.34);
+    backdrop-filter: blur(3px);
+}
+
+.klaviyo-signup-panel {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    border: 1px solid rgba(143, 100, 28, 0.28);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 15% 0%, rgba(242, 215, 131, 0.22), rgba(242, 215, 131, 0) 38%),
+        rgba(255, 252, 244, 0.96);
+    box-shadow: 0 24px 70px rgba(89, 65, 25, 0.24);
+    box-sizing: border-box;
+}
+
+.klaviyo-signup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.klaviyo-signup-header h2 {
+    margin: 0;
+    color: #8f641c;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(26px, 5vw, 34px);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.klaviyo-signup-copy,
+.klaviyo-signup-message {
+    margin: 0;
+    color: #4d402a;
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.klaviyo-signup-form {
+    display: grid;
+    gap: 12px;
+}
+
+.klaviyo-signup-label {
+    display: grid;
+    gap: 7px;
+    color: #8f641c;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.3px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.klaviyo-signup-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(143, 100, 28, 0.36);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.68);
+    color: #21180c;
+    font: 600 14px/1.2 "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
+    letter-spacing: 0.04em;
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.klaviyo-signup-input:focus-visible {
+    border-color: rgba(143, 100, 28, 0.62);
+    outline: 2px solid rgba(242, 215, 131, 0.36);
+    outline-offset: 2px;
+}
+
+.klaviyo-signup-submit {
+    justify-self: center;
+    width: min(100%, 290px);
+    border: none;
+    border-radius: var(--luxury-button-radius);
+    background: var(--luxury-button-bg);
+    color: var(--luxury-button-text);
+    cursor: pointer;
+    font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 10.75px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    padding: 11px 18px;
+    text-transform: uppercase;
+    transition: background 300ms ease, color 300ms ease, transform 300ms ease;
+}
+
+.klaviyo-signup-submit:hover,
+.klaviyo-signup-submit:focus-visible {
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.klaviyo-signup-submit:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.35);
+    opacity: 0.55;
+}
+
+.klaviyo-signup-message {
+    min-height: 18px;
+}
+
+.klaviyo-signup-message.is-error {
+    color: #8f2f1c;
+}
+
 .image-viewer-modal {
     width: min(50vw, calc(100vw - 32px));
     height: min(95vh, calc(100vh - 32px));
@@ -1961,6 +2089,7 @@ body.about-background .about-hero {
 .preorder-confirm-back,
 .preorder-confirm-continue,
 .mailing-list-trigger,
+.klaviyo-signup-submit,
 .thank-you-action,
 .cart-close,
 .cart-remove,
@@ -1999,6 +2128,8 @@ body.about-background .about-hero {
 .preorder-confirm-continue:focus-visible,
 .mailing-list-trigger:hover,
 .mailing-list-trigger:focus-visible,
+.klaviyo-signup-submit:hover,
+.klaviyo-signup-submit:focus-visible,
 .thank-you-action:hover,
 .thank-you-action:focus-visible,
 .cart-close:hover,
@@ -2029,6 +2160,7 @@ body.about-background .about-hero {
 .preorder-confirm-back,
 .preorder-confirm-continue,
 .mailing-list-trigger,
+.klaviyo-signup-submit,
 .thank-you-action,
 .cart-close,
 .cart-remove,
@@ -2168,6 +2300,18 @@ body.about-background .about-hero {
 
     .contact-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 761px) and (max-width: 1320px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 278px);
+    }
+}
+
+@media (hover: none) and (pointer: coarse) and (min-width: 761px) and (max-width: 1366px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 278px);
     }
 }
 
