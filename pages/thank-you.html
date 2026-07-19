@@ -95,5 +95,24 @@
         </div>
     </footer>
 
+    <script>
+        (() => {
+            const sessionId = new URLSearchParams(window.location.search).get('session_id');
+
+            if (!sessionId || window.location.protocol === 'file:') {
+                return;
+            }
+
+            fetch('/api/confirm-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sessionId }),
+                cache: 'no-store'
+            }).catch(() => {});
+        })();
+    </script>
+
 </body>
 </html>

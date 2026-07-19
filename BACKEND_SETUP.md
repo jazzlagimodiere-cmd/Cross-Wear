@@ -52,6 +52,7 @@ Do not commit `.env` or paste secret keys into chat.
 - Each Scripture Collection product/size starts with 24 items.
 - When a customer starts checkout, the backend reserves that stock for `CHECKOUT_RESERVATION_SECONDS`, currently 30 minutes.
 - If Stripe reports the checkout as completed, the reservation becomes sold inventory.
+- The thank-you page also verifies the returned Stripe `session_id` with the backend and marks the reservation sold after a paid session. This is a backup path if Stripe webhook delivery is delayed.
 - If Stripe reports the checkout as expired or failed, the reservation is released.
 - If the visible frontend stock is changed by a visitor, Stripe Checkout still uses backend prices and backend stock checks.
 
@@ -72,7 +73,7 @@ checkout.session.async_payment_succeeded
 checkout.session.async_payment_failed
 ```
 
-Copy the webhook signing secret into Netlify as `STRIPE_WEBHOOK_SECRET`. Without this webhook, checkout sessions can reserve stock, but completed/expired sessions cannot be finalized automatically.
+Copy the webhook signing secret into Netlify as `STRIPE_WEBHOOK_SECRET`. Without this webhook, checkout sessions can reserve stock, and the thank-you page can confirm successful paid sessions, but expired/failed sessions cannot be released automatically until the reservation window passes.
 
 ## Apple Pay Notes
 
