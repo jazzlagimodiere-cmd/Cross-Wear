@@ -62,10 +62,7 @@ const products = {
   }
 };
 
-const getInventoryStore = () => getStore({
-  name: inventoryStoreName,
-  consistency: 'strong'
-});
+const getInventoryStore = () => getStore(inventoryStoreName);
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
