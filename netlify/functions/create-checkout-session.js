@@ -4,8 +4,7 @@ const {
   connectInventoryStore,
   normalizeOrderItems,
   releaseReservation,
-  reserveInventory,
-  updateReservationSession
+  reserveInventory
 } = require('./inventory-store');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -134,12 +133,6 @@ exports.handler = async (event) => {
       success_url: `${checkoutSiteUrl}/api/confirm-checkout-session?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${checkoutSiteUrl}/`
     });
-
-    try {
-      await updateReservationSession(reservation.reservationId, session.id);
-    } catch (error) {
-      console.error('Unable to attach Stripe session to reservation:', error);
-    }
 
     return jsonResponse(200, { url: session.url });
   } catch (error) {

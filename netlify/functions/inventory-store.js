@@ -78,6 +78,13 @@ const connectInventoryStore = (event) => {
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+const skipInventoryWrite = (result) => ({
+  skipInventoryWrite: true,
+  result
+});
+
+const isSkippedInventoryWrite = (result) => Boolean(result?.skipInventoryWrite);
+
 const normalizeSize = (size) => String(size || '').trim().toUpperCase();
 
 const getVariantKey = (name, size) => `${name}|${normalizeSize(size)}`;
@@ -237,6 +244,11 @@ const mutateInventory = async (mutator) => {
     expireOldReservations(inventory, now);
 
     const result = mutator(inventory, now);
+
+    if (isSkippedInventoryWrite(result)) {
+      return result.result;
+    }
+
     inventory.updatedAt = new Date(now).toISOString();
 
     const writeResult = await store.setJSON(inventoryKey, inventory, {
@@ -339,30 +351,20 @@ const reserveInventory = async (orderItems) => {
   });
 };
 
-const updateReservationSession = async (reservationId, stripeSessionId) => {
-  if (!reservationId || !stripeSessionId) {
-    return;
-  }
-
-  await mutateInventory((inventory) => {
-    const reservation = inventory.reservations[reservationId];
-
-    if (reservation) {
-      reservation.stripeSessionId = stripeSessionId;
-    }
-  });
-};
-
 const completeReservation = async (reservationId, stripeSessionId) => {
   if (!reservationId) {
-    return;
+    return { completed: false };
   }
 
-  await mutateInventory((inventory, now) => {
+  return mutateInventory((inventory, now) => {
     const reservation = inventory.reservations[reservationId];
 
-    if (!reservation || reservation.status === 'completed') {
-      return;
+    if (!reservation) {
+      throw new InventoryError('Reservation was not found.', 409, { retryable: true });
+    }
+
+    if (reservation.status === 'completed') {
+      return skipInventoryWrite({ completed: true, alreadyCompleted: true });
     }
 
     reservation.items.forEach((item) => {
@@ -376,6 +378,8 @@ const completeReservation = async (reservationId, stripeSessionId) => {
     reservation.status = 'completed';
     reservation.completedAt = new Date(now).toISOString();
     reservation.stripeSessionId = stripeSessionId || reservation.stripeSessionId || null;
+
+    return { completed: true };
   });
 };
 
@@ -388,7 +392,11 @@ const releaseReservation = async (reservationId, reason = 'released') => {
     const reservation = inventory.reservations[reservationId];
 
     if (!reservation || reservation.status === 'completed') {
-      return;
+      return skipInventoryWrite({ released: false });
+    }
+
+    if (reservation.status === 'released' || reservation.status === 'expired') {
+      return skipInventoryWrite({ released: true, alreadyReleased: true });
     }
 
     reservation.status = reason === 'expired' ? 'expired' : 'released';
@@ -432,6 +440,5 @@ module.exports = {
   normalizeOrderItems,
   products,
   releaseReservation,
-  reserveInventory,
-  updateReservationSession
+  reserveInventory
 };

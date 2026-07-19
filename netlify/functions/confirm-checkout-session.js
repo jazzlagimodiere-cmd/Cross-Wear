@@ -1,7 +1,8 @@
 const Stripe = require('stripe');
 const {
   completeReservation,
-  connectInventoryStore
+  connectInventoryStore,
+  InventoryError
 } = require('./inventory-store');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -27,6 +28,30 @@ const redirectResponse = (location) => ({
 
 const getReservationId = (session) => session?.metadata?.reservation_id || session?.client_reference_id || '';
 
+const confirmationRetryDelays = [1000, 2000, 3000, 5000, 8000];
+
+const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const completePaidReservation = async (event, reservationId, stripeSessionId) => {
+  connectInventoryStore(event);
+
+  for (let attempt = 0; attempt <= confirmationRetryDelays.length; attempt += 1) {
+    try {
+      return await completeReservation(reservationId, stripeSessionId);
+    } catch (error) {
+      const shouldRetry = error instanceof InventoryError && error.details?.retryable && attempt < confirmationRetryDelays.length;
+
+      if (!shouldRetry) {
+        throw error;
+      }
+
+      await delay(confirmationRetryDelays[attempt]);
+    }
+  }
+
+  return { completed: false };
+};
+
 const confirmCheckoutSession = async (event, sessionId) => {
   if (!stripe) {
     return { ok: false, statusCode: 500, body: { error: 'Checkout confirmation is temporarily unavailable.' } };
@@ -48,8 +73,7 @@ const confirmCheckoutSession = async (event, sessionId) => {
       return { ok: false, statusCode: 202, body: { confirmed: false, status: session.payment_status } };
     }
 
-    connectInventoryStore(event);
-    await completeReservation(reservationId, session.id);
+    await completePaidReservation(event, reservationId, session.id);
 
     return { ok: true, statusCode: 200, body: { confirmed: true } };
   } catch (error) {
