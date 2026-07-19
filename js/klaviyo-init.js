@@ -43,66 +43,6 @@ const getKlaviyoSignupModal = () => {
 	return modal;
 };
 
-const nudgeModalPanel = (panel) => {
-	panel.classList.remove('is-nudging');
-	void panel.offsetWidth;
-	panel.classList.add('is-nudging');
-};
-
-const getKlaviyoSuccessModal = () => {
-	let modal = document.querySelector('#klaviyo-success-modal');
-
-	if (modal) {
-		return modal;
-	}
-
-	modal = document.createElement('dialog');
-	modal.className = 'klaviyo-success-modal';
-	modal.id = 'klaviyo-success-modal';
-	modal.setAttribute('aria-labelledby', 'klaviyo-success-title');
-	modal.innerHTML = `
-		<div class="klaviyo-success-panel">
-			<div class="klaviyo-success-icon" aria-hidden="true">✓</div>
-			<h2 id="klaviyo-success-title">Almost Done</h2>
-			<p>Check your inbox to confirm your signup.</p>
-			<button class="klaviyo-success-close small-action-button" type="button">Close Message</button>
-		</div>`;
-
-	document.body.appendChild(modal);
-
-	const panel = modal.querySelector('.klaviyo-success-panel');
-	const closeButton = modal.querySelector('.klaviyo-success-close');
-
-	closeButton.addEventListener('click', () => modal.close());
-	modal.addEventListener('cancel', (event) => {
-		event.preventDefault();
-		nudgeModalPanel(panel);
-		closeButton.focus({ preventScroll: true });
-	});
-	modal.addEventListener('click', (event) => {
-		if (event.target === modal) {
-			event.preventDefault();
-			nudgeModalPanel(panel);
-			closeButton.focus({ preventScroll: true });
-		}
-	});
-
-	return modal;
-};
-
-const openKlaviyoSuccessModal = () => {
-	const modal = getKlaviyoSuccessModal();
-	const closeButton = modal.querySelector('.klaviyo-success-close');
-
-	if (typeof modal.showModal === 'function') {
-		modal.showModal();
-	} else {
-		modal.setAttribute('open', '');
-	}
-
-	closeButton.focus({ preventScroll: true });
-};
-
 const setKlaviyoSignupMessage = (modal, message, isError = false) => {
 	const messageElement = modal.querySelector('.klaviyo-signup-message');
 
@@ -200,8 +140,8 @@ document.addEventListener('submit', async (event) => {
 	try {
 		await subscribeToKlaviyoList(email, listId);
 		form.reset();
-		modal.close();
-		openKlaviyoSuccessModal();
+		setKlaviyoSignupMessage(modal, 'Check your inbox to confirm your signup.');
+		window.alert('Check your inbox to confirm your signup.');
 	} catch (error) {
 		setKlaviyoSignupMessage(modal, 'Signup could not be completed. Please try again.', true);
 	} finally {
