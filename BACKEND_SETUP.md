@@ -2,6 +2,8 @@
 
 This site uses a Netlify Function to create Stripe Checkout Sessions for preorders. Stripe Checkout can show Apple Pay automatically when the Stripe account, verified domain, browser, device, and payment method support it.
 
+Inventory is protected on the backend with Netlify Blobs. The storefront can show availability, but checkout always re-validates inventory on the server before Stripe Checkout is created.
+
 ## Local Setup
 
 1. Install Node.js from https://nodejs.org/ if it is not already installed.
@@ -16,8 +18,10 @@ npm install
 
 ```env
 STRIPE_SECRET_KEY=sk_test_your_real_test_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_test_webhook_secret
 SITE_URL=http://localhost:8888
 STRIPE_CURRENCY=cad
+CHECKOUT_RESERVATION_SECONDS=1800
 ```
 
 5. Start the Netlify dev server:
@@ -34,11 +38,41 @@ In Netlify, add these environment variables for the deployed site:
 
 ```env
 STRIPE_SECRET_KEY=sk_live_or_test_key_from_stripe
+STRIPE_WEBHOOK_SECRET=whsec_live_or_test_webhook_secret_from_stripe
 SITE_URL=https://jesuscrosswear.ca
 STRIPE_CURRENCY=cad
+CHECKOUT_RESERVATION_SECONDS=1800
 ```
 
 Do not commit `.env` or paste secret keys into chat.
+
+## Inventory Protection
+
+- Each Signature Collection product/size starts with 10 items.
+- Each Scripture Collection product/size starts with 24 items.
+- When a customer starts checkout, the backend reserves that stock for `CHECKOUT_RESERVATION_SECONDS`, currently 30 minutes.
+- If Stripe reports the checkout as completed, the reservation becomes sold inventory.
+- If Stripe reports the checkout as expired or failed, the reservation is released.
+- If the visible frontend stock is changed by a visitor, Stripe Checkout still uses backend prices and backend stock checks.
+
+## Stripe Webhook Setup
+
+In Stripe, create a webhook endpoint for:
+
+```text
+https://jesuscrosswear.ca/api/stripe-webhook
+```
+
+Subscribe it to these events:
+
+```text
+checkout.session.completed
+checkout.session.expired
+checkout.session.async_payment_succeeded
+checkout.session.async_payment_failed
+```
+
+Copy the webhook signing secret into Netlify as `STRIPE_WEBHOOK_SECRET`. Without this webhook, checkout sessions can reserve stock, but completed/expired sessions cannot be finalized automatically.
 
 ## Apple Pay Notes
 

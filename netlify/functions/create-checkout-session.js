@@ -1,4 +1,11 @@
 const Stripe = require('stripe');
+const {
+  InventoryError,
+  normalizeOrderItems,
+  releaseReservation,
+  reserveInventory,
+  updateReservationSession
+} = require('./inventory-store');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
@@ -35,44 +42,6 @@ const resolveSiteUrl = (event) => {
   return configuredSiteUrl || requestSiteUrl || defaultSiteUrl;
 };
 
-const products = {
-  'I AM': {
-    displayName: 'Cross Wear I AM Premium Hoodie',
-    unitAmount: 25000,
-    allowedSizes: ['L', 'XL']
-  },
-  Jesus: {
-    displayName: 'Jesus Premium Crewneck',
-    unitAmount: 20000,
-    allowedSizes: ['L', 'XL']
-  },
-  Saved: {
-    displayName: 'Saved Premium Crewneck',
-    unitAmount: 20000,
-    allowedSizes: ['L', 'XL']
-  },
-  'Ezekiel 36:26': {
-    displayName: 'Ezekiel 36:26 Scripture Line',
-    unitAmount: 6500,
-    allowedSizes: ['L', 'XL']
-  },
-  'Matthew 11:28': {
-    displayName: 'Matthew 11:28 Scripture Line',
-    unitAmount: 6500,
-    allowedSizes: ['L', 'XL']
-  },
-  'John 14:30': {
-    displayName: 'John 14:30 Scripture Line',
-    unitAmount: 6500,
-    allowedSizes: ['L', 'XL']
-  },
-  'Luke 17:21': {
-    displayName: 'Luke 17:21 Scripture Line',
-    unitAmount: 6500,
-    allowedSizes: ['L', 'XL']
-  }
-};
-
 const jsonResponse = (statusCode, body) => ({
   statusCode,
   headers: {
@@ -81,36 +50,18 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body)
 });
 
-const sanitizeQuantity = (quantity) => {
-  const parsedQuantity = Number(quantity);
-
-  if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 10) {
-    return null;
-  }
-
-  return parsedQuantity;
-};
-
 const buildLineItem = (item) => {
-  const product = products[item.name];
-  const quantity = sanitizeQuantity(item.quantity);
-  const size = String(item.size || '').trim().toUpperCase();
-
-  if (!product || !quantity || !product.allowedSizes.includes(size)) {
-    return null;
-  }
-
   return {
-    quantity,
+    quantity: item.quantity,
     price_data: {
       currency,
-      unit_amount: product.unitAmount,
+      unit_amount: item.unitAmount,
       product_data: {
-        name: product.displayName,
-        description: `Size ${size}`,
+        name: item.displayName,
+        description: `Size ${item.size}`,
         metadata: {
           product: item.name,
-          size
+          size: item.size
         }
       }
     }
@@ -134,19 +85,38 @@ exports.handler = async (event) => {
     return jsonResponse(400, { error: 'Invalid checkout payload.' });
   }
 
-  const lineItems = Array.isArray(payload.items) ? payload.items.map(buildLineItem).filter(Boolean) : [];
+  const orderItems = normalizeOrderItems(payload.items);
 
-  if (!lineItems.length) {
+  if (!orderItems.length) {
     return jsonResponse(400, { error: 'No valid preorder items were provided.' });
   }
 
+  let reservation;
+
+  try {
+    reservation = await reserveInventory(orderItems);
+  } catch (error) {
+    if (error instanceof InventoryError) {
+      return jsonResponse(error.statusCode, {
+        error: error.message,
+        details: error.details
+      });
+    }
+
+    console.error('Inventory reservation error:', error);
+    return jsonResponse(500, { error: 'Unable to reserve preorder inventory.' });
+  }
+
   const checkoutSiteUrl = resolveSiteUrl(event);
+  const lineItems = orderItems.map(buildLineItem);
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      client_reference_id: reservation.reservationId,
       line_items: lineItems,
+      expires_at: Math.floor(reservation.expiresAt / 1000),
       success_url: `${checkoutSiteUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${checkoutSiteUrl}/`,
       billing_address_collection: 'required',
@@ -157,12 +127,25 @@ exports.handler = async (event) => {
         enabled: true
       },
       metadata: {
-        order_type: 'preorder'
+        order_type: 'preorder',
+        reservation_id: reservation.reservationId
       }
     });
 
+    try {
+      await updateReservationSession(reservation.reservationId, session.id);
+    } catch (error) {
+      console.error('Unable to attach Stripe session to reservation:', error);
+    }
+
     return jsonResponse(200, { url: session.url });
   } catch (error) {
+    try {
+      await releaseReservation(reservation.reservationId, 'stripe_session_error');
+    } catch (releaseError) {
+      console.error('Unable to release reservation after Stripe error:', releaseError);
+    }
+
     console.error('Stripe checkout session error:', error);
     return jsonResponse(500, { error: 'Unable to start checkout.' });
   }

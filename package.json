@@ -4,6 +4,7 @@
     "start": "netlify dev"
   },
   "dependencies": {
+    "@netlify/blobs": "^8.1.0",
     "stripe": "^17.5.0"
   },
   "devDependencies": {

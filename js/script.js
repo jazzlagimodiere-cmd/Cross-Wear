@@ -55,12 +55,23 @@ const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
 const imageViewerClose = document.querySelector('.image-viewer-close');
 const unitPrice = 65.00;
-const defaultVariantStock = 10;
+const defaultSignatureVariantStock = 10;
+const defaultScriptureVariantStock = 24;
+const defaultVariantStockByProduct = {
+    'I AM': defaultSignatureVariantStock,
+    Jesus: defaultSignatureVariantStock,
+    Saved: defaultSignatureVariantStock,
+    'Ezekiel 36:26': defaultScriptureVariantStock,
+    'Matthew 11:28': defaultScriptureVariantStock,
+    'John 14:30': defaultScriptureVariantStock,
+    'Luke 17:21': defaultScriptureVariantStock
+};
 const inventoryOverrides = {};
 const cartItems = [];
 const availabilityUpdaters = [];
 const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
+const inventoryStatusUrl = '/api/inventory';
 let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
 const signaturePreviewTapMoveThreshold = 8;
@@ -583,7 +594,7 @@ document.addEventListener('keydown', (event) => {
 
 const getVariantStockLimit = (selection) => {
     const variantKey = getVariantKey(selection);
-    return inventoryOverrides[variantKey] ?? defaultVariantStock;
+    return inventoryOverrides[variantKey] ?? defaultVariantStockByProduct[selection.name] ?? defaultSignatureVariantStock;
 };
 
 const getCartQuantityForVariant = (variantKey) => {
@@ -609,6 +620,49 @@ const getRemainingStock = (selection) => {
 
 const updateAllOrderAvailability = () => {
     availabilityUpdaters.forEach((updateAvailability) => updateAvailability());
+};
+
+const applyInventoryStatus = (inventoryStatus) => {
+    if (!inventoryStatus?.variants) {
+        return;
+    }
+
+    Object.keys(inventoryOverrides).forEach((variantKey) => {
+        delete inventoryOverrides[variantKey];
+    });
+
+    Object.entries(inventoryStatus.variants).forEach(([variantKey, variant]) => {
+        const available = Number(variant.available);
+
+        if (Number.isFinite(available)) {
+            inventoryOverrides[variantKey] = Math.max(0, Math.floor(available));
+        }
+    });
+
+    updateAllOrderAvailability();
+};
+
+const loadInventoryStatus = async () => {
+    if (window.location.protocol === 'file:') {
+        return;
+    }
+
+    try {
+        const response = await fetch(inventoryStatusUrl, {
+            headers: {
+                Accept: 'application/json'
+            },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        applyInventoryStatus(await response.json());
+    } catch (error) {
+        // Keep the static fallback stock if the inventory endpoint is unavailable.
+    }
 };
 
 const getSizeSelector = (sizeSelect) => {
@@ -964,7 +1018,7 @@ const startStripeCheckout = async () => {
         const checkoutSession = await response.json();
 
         if (!response.ok || !checkoutSession.url) {
-            throw new Error('Secure checkout is almost ready. Please check back shortly.');
+            throw new Error(checkoutSession.error || 'Secure checkout is almost ready. Please check back shortly.');
         }
 
         window.location.href = checkoutSession.url;
@@ -972,6 +1026,12 @@ const startStripeCheckout = async () => {
         if (preorderConfirmContinue) {
             preorderConfirmContinue.disabled = false;
         }
+
+        if (preorderConfirmSummary) {
+            preorderConfirmSummary.textContent = error.message || 'Unable to start checkout. Please try again.';
+        }
+
+        await loadInventoryStatus();
     }
 };
 
@@ -1009,6 +1069,7 @@ productCards.forEach((productCard) => {
     }
 
     const openOrderModal = () => {
+        loadInventoryStatus();
         updateAvailability({ preserveQuantity: false });
         if (sizeSelect) {
             updateSizeSelector(sizeSelect);
@@ -1168,3 +1229,5 @@ productCards.forEach((productCard) => {
         window.setTimeout(() => openCartModal(getCartSummaryText()), 0);
     });
 });
+
+loadInventoryStatus();
