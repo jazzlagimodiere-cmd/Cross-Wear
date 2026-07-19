@@ -120,8 +120,6 @@ exports.handler = async (event) => {
       client_reference_id: reservation.reservationId,
       line_items: lineItems,
       expires_at: Math.floor(reservation.expiresAt / 1000),
-      success_url: `${checkoutSiteUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${checkoutSiteUrl}/`,
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['CA']
@@ -132,7 +130,9 @@ exports.handler = async (event) => {
       metadata: {
         order_type: 'preorder',
         reservation_id: reservation.reservationId
-      }
+      },
+      success_url: `${checkoutSiteUrl}/api/confirm-checkout-session?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${checkoutSiteUrl}/`
     });
 
     try {

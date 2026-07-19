@@ -52,7 +52,8 @@ Do not commit `.env` or paste secret keys into chat.
 - Each Scripture Collection product/size starts with 24 items.
 - When a customer starts checkout, the backend reserves that stock for `CHECKOUT_RESERVATION_SECONDS`, currently 30 minutes.
 - If Stripe reports the checkout as completed, the reservation becomes sold inventory.
-- The thank-you page also verifies the returned Stripe `session_id` with the backend and marks the reservation sold after a paid session. This is a backup path if Stripe webhook delivery is delayed.
+- Stripe returns successful checkouts to a backend confirmation endpoint first. The backend verifies the Stripe `session_id`, marks the reservation sold after a paid session, then redirects to the thank-you page.
+- The thank-you page also verifies a returned Stripe `session_id` if one is present. This is a backup path if Stripe webhook delivery is delayed.
 - If Stripe reports the checkout as expired or failed, the reservation is released.
 - If the visible frontend stock is changed by a visitor, Stripe Checkout still uses backend prices and backend stock checks.
 
