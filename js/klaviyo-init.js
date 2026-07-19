@@ -36,11 +36,64 @@ const getKlaviyoSignupModal = () => {
 	modal.querySelector('.klaviyo-signup-close').addEventListener('click', () => modal.close());
 	modal.addEventListener('click', (event) => {
 		if (event.target === modal) {
+			const noticeBox = modal.querySelector('.klaviyo-success-notice-box');
+
+			if (noticeBox) {
+				nudgeKlaviyoSuccessNotice(noticeBox);
+				return;
+			}
+
 			modal.close();
+		}
+	});
+	modal.addEventListener('cancel', (event) => {
+		const noticeBox = modal.querySelector('.klaviyo-success-notice-box');
+
+		if (noticeBox) {
+			event.preventDefault();
+			nudgeKlaviyoSuccessNotice(noticeBox);
 		}
 	});
 
 	return modal;
+};
+
+const nudgeKlaviyoSuccessNotice = (noticeBox) => {
+	noticeBox.classList.remove('is-nudging');
+	void noticeBox.offsetWidth;
+	noticeBox.classList.add('is-nudging');
+};
+
+const showKlaviyoSuccessNotice = (modal) => {
+	const panel = modal.querySelector('.klaviyo-signup-panel');
+	let notice = modal.querySelector('.klaviyo-success-notice');
+
+	if (!notice) {
+		notice = document.createElement('div');
+		notice.className = 'klaviyo-success-notice';
+		notice.setAttribute('role', 'alertdialog');
+		notice.setAttribute('aria-modal', 'true');
+		notice.setAttribute('aria-labelledby', 'klaviyo-success-notice-title');
+		notice.innerHTML = `
+			<div class="klaviyo-success-notice-box">
+				<div class="klaviyo-success-notice-icon" aria-hidden="true">✓</div>
+				<h3 id="klaviyo-success-notice-title">Check Your Inbox</h3>
+				<p>Confirm your signup from the email we just sent.</p>
+				<button class="klaviyo-success-notice-close small-action-button" type="button">Close Message</button>
+			</div>`;
+
+		panel.appendChild(notice);
+		notice.addEventListener('click', (event) => {
+			const noticeBox = notice.querySelector('.klaviyo-success-notice-box');
+
+			if (event.target === notice) {
+				nudgeKlaviyoSuccessNotice(noticeBox);
+			}
+		});
+		notice.querySelector('.klaviyo-success-notice-close').addEventListener('click', () => notice.remove());
+	}
+
+	notice.querySelector('.klaviyo-success-notice-close').focus({ preventScroll: true });
 };
 
 const setKlaviyoSignupMessage = (modal, message, isError = false) => {
@@ -141,7 +194,7 @@ document.addEventListener('submit', async (event) => {
 		await subscribeToKlaviyoList(email, listId);
 		form.reset();
 		setKlaviyoSignupMessage(modal, 'Check your inbox to confirm your signup.');
-		window.alert('Check your inbox to confirm your signup.');
+		showKlaviyoSuccessNotice(modal);
 	} catch (error) {
 		setKlaviyoSignupMessage(modal, 'Signup could not be completed. Please try again.', true);
 	} finally {
