@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { connectLambda, getStore } = require('@netlify/blobs');
 
 const inventoryStoreName = 'cross-wear-inventory';
-const inventoryKey = 'inventory-v1';
+const inventoryKey = 'inventory-v2';
 const configuredReservationSeconds = Number(process.env.CHECKOUT_RESERVATION_SECONDS || 30 * 60);
 const signatureInitialStock = 10;
 const scriptureInitialStock = 24;

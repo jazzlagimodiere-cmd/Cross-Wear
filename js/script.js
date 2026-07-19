@@ -731,6 +731,7 @@ const updateQuantityStepper = (quantitySelect, maxQuantity) => {
 
     if (quantityValue) {
         quantityValue.textContent = currentQuantity > 0 ? String(currentQuantity) : '--';
+        quantityValue.classList.toggle('has-value', currentQuantity > 0);
     }
 
     if (decreaseButton) {
@@ -951,6 +952,44 @@ const closePreorderConfirmModal = ({ reopenCart = false } = {}) => {
     }
 };
 
+const getOrderValidationBubble = (orderPanel) => {
+    let bubble = orderPanel.querySelector('.order-validation-bubble');
+
+    if (!bubble) {
+        bubble = document.createElement('p');
+        bubble.className = 'order-validation-bubble';
+        bubble.setAttribute('aria-live', 'polite');
+        orderPanel.append(bubble);
+    }
+
+    return bubble;
+};
+
+const clearOrderValidationBubble = (orderPanel) => {
+    const bubble = orderPanel.querySelector('.order-validation-bubble');
+
+    if (!bubble) {
+        return;
+    }
+
+    window.clearTimeout(bubble.fadeTimer);
+    bubble.textContent = '';
+    bubble.classList.remove('is-visible');
+};
+
+const showOrderValidationBubble = (orderPanel, message) => {
+    const bubble = getOrderValidationBubble(orderPanel);
+
+    window.clearTimeout(bubble.fadeTimer);
+    bubble.classList.remove('is-visible');
+    void bubble.offsetWidth;
+    bubble.textContent = message;
+    bubble.classList.add('is-visible');
+    bubble.fadeTimer = window.setTimeout(() => {
+        clearOrderValidationBubble(orderPanel);
+    }, 2100);
+};
+
 const openPreorderConfirmModal = () => {
     if (!cartItems.length) {
         if (cartModalNote) {
@@ -1078,6 +1117,7 @@ productCards.forEach((productCard) => {
         if (orderMessage) {
             orderMessage.textContent = '';
         }
+        clearOrderValidationBubble(orderPanel);
 
         if (orderToggle) {
             orderToggle.setAttribute('aria-expanded', 'true');
@@ -1137,6 +1177,7 @@ productCards.forEach((productCard) => {
             if (orderMessage) {
                 orderMessage.textContent = '';
             }
+            clearOrderValidationBubble(orderPanel);
         });
     });
 
@@ -1179,6 +1220,7 @@ productCards.forEach((productCard) => {
         if (orderMessage) {
             orderMessage.textContent = '';
         }
+        clearOrderValidationBubble(orderPanel);
     });
 
     orderPanel.addEventListener('submit', (event) => {
@@ -1191,18 +1233,21 @@ productCards.forEach((productCard) => {
         const quantity = Number(orderData.get('quantity')) || 0;
 
         if (remainingStock === 0) {
+            clearOrderValidationBubble(orderPanel);
             orderMessage.textContent = 'This selection is sold out.';
             updateAvailability();
             return;
         }
 
         if (quantity === 0) {
-            orderMessage.textContent = 'Please select a quantity.';
+            orderMessage.textContent = '';
+            showOrderValidationBubble(orderPanel, 'Select a quantity to preorder.');
             updateAvailability({ preserveQuantity: false });
             return;
         }
 
         if (quantity < 1 || quantity > remainingStock) {
+            clearOrderValidationBubble(orderPanel);
             orderMessage.textContent = `Only ${remainingStock} available for this selection.`;
             updateAvailability();
             return;
@@ -1223,6 +1268,7 @@ productCards.forEach((productCard) => {
         updateCartButton();
         renderCart();
         updateAvailability({ preserveQuantity: false });
+        clearOrderValidationBubble(orderPanel);
 
         orderMessage.textContent = `${quantity} item${quantity === 1 ? '' : 's'} added to your preorder.`;
         closeOrderModal();

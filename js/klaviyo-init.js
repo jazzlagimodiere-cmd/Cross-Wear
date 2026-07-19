@@ -22,24 +22,41 @@ const getKlaviyoSignupModal = () => {
 				<button class="klaviyo-signup-close small-action-button" type="button">Close</button>
 			</div>
 			<p class="klaviyo-signup-copy">Get preorder updates, restock notes, and new collection releases.</p>
-			<form class="klaviyo-signup-form">
+			<form class="klaviyo-signup-form" novalidate>
+				<p class="klaviyo-signup-message" id="klaviyo-signup-message" aria-live="polite"></p>
 				<label class="klaviyo-signup-label">
 					Email
-					<input class="klaviyo-signup-input" type="email" name="email" autocomplete="email" placeholder="email@example.com" required>
+					<input class="klaviyo-signup-input" type="email" name="email" autocomplete="email" placeholder="email@example.com" aria-describedby="klaviyo-signup-message" required>
 				</label>
 				<button class="klaviyo-signup-submit" type="submit">Join Mailing List</button>
-				<p class="klaviyo-signup-message" aria-live="polite"></p>
 			</form>
+			<div class="klaviyo-success-notice" role="alertdialog" aria-modal="true" aria-labelledby="klaviyo-success-notice-title" hidden>
+				<div class="klaviyo-success-notice-box">
+					<div class="klaviyo-success-notice-message">
+						<p class="klaviyo-success-notice-kicker">Signup Sent</p>
+						<h3 id="klaviyo-success-notice-title">Check Your Inbox</h3>
+						<p>Confirm your signup from the email we just sent.</p>
+					</div>
+					<button class="klaviyo-success-notice-close klaviyo-signup-submit" type="button">Close Message</button>
+				</div>
+			</div>
 		</div>`;
 
 	document.body.appendChild(modal);
 	modal.querySelector('.klaviyo-signup-close').addEventListener('click', () => modal.close());
+	modal.querySelector('.klaviyo-success-notice').addEventListener('click', (event) => {
+		if (event.target === event.currentTarget) {
+			nudgeKlaviyoSuccessNotice(modal.querySelector('.klaviyo-success-notice-box'));
+		}
+	});
+	modal.querySelector('.klaviyo-success-notice-close').addEventListener('click', () => {
+		modal.querySelector('.klaviyo-success-notice').hidden = true;
+		modal.querySelector('.klaviyo-signup-close').focus({ preventScroll: true });
+	});
 	modal.addEventListener('click', (event) => {
 		if (event.target === modal) {
-			const noticeBox = modal.querySelector('.klaviyo-success-notice-box');
-
-			if (noticeBox) {
-				nudgeKlaviyoSuccessNotice(noticeBox);
+			if (isKlaviyoSuccessNoticeOpen(modal)) {
+				nudgeKlaviyoSuccessNotice(modal.querySelector('.klaviyo-success-notice-box'));
 				return;
 			}
 
@@ -47,15 +64,19 @@ const getKlaviyoSignupModal = () => {
 		}
 	});
 	modal.addEventListener('cancel', (event) => {
-		const noticeBox = modal.querySelector('.klaviyo-success-notice-box');
-
-		if (noticeBox) {
+		if (isKlaviyoSuccessNoticeOpen(modal)) {
 			event.preventDefault();
-			nudgeKlaviyoSuccessNotice(noticeBox);
+			nudgeKlaviyoSuccessNotice(modal.querySelector('.klaviyo-success-notice-box'));
 		}
 	});
 
 	return modal;
+};
+
+const isKlaviyoSuccessNoticeOpen = (modal) => {
+	const notice = modal.querySelector('.klaviyo-success-notice');
+
+	return Boolean(notice && !notice.hidden);
 };
 
 const nudgeKlaviyoSuccessNotice = (noticeBox) => {
@@ -65,45 +86,44 @@ const nudgeKlaviyoSuccessNotice = (noticeBox) => {
 };
 
 const showKlaviyoSuccessNotice = (modal) => {
-	const panel = modal.querySelector('.klaviyo-signup-panel');
-	let notice = modal.querySelector('.klaviyo-success-notice');
+	const notice = modal.querySelector('.klaviyo-success-notice');
+	const noticeBox = modal.querySelector('.klaviyo-success-notice-box');
 
-	if (!notice) {
-		notice = document.createElement('div');
-		notice.className = 'klaviyo-success-notice';
-		notice.setAttribute('role', 'alertdialog');
-		notice.setAttribute('aria-modal', 'true');
-		notice.setAttribute('aria-labelledby', 'klaviyo-success-notice-title');
-		notice.innerHTML = `
-			<div class="klaviyo-success-notice-box">
-				<div class="klaviyo-success-notice-icon" aria-hidden="true">✓</div>
-				<h3 id="klaviyo-success-notice-title">Check Your Inbox</h3>
-				<p>Confirm your signup from the email we just sent.</p>
-				<button class="klaviyo-success-notice-close small-action-button" type="button">Close Message</button>
-			</div>`;
-
-		panel.appendChild(notice);
-		notice.addEventListener('click', (event) => {
-			const noticeBox = notice.querySelector('.klaviyo-success-notice-box');
-
-			if (event.target === notice) {
-				nudgeKlaviyoSuccessNotice(noticeBox);
-			}
-		});
-		notice.querySelector('.klaviyo-success-notice-close').addEventListener('click', () => notice.remove());
-	}
+	notice.hidden = false;
+	noticeBox.classList.remove('is-nudging');
 
 	notice.querySelector('.klaviyo-success-notice-close').focus({ preventScroll: true });
 };
 
-const setKlaviyoSignupMessage = (modal, message, isError = false) => {
+const setKlaviyoSignupMessage = (modal, message, isError = false, shouldFade = false) => {
 	const messageElement = modal.querySelector('.klaviyo-signup-message');
 
+	window.clearTimeout(messageElement.klaviyoFadeTimer);
+	messageElement.classList.remove('is-bubble');
+	void messageElement.offsetWidth;
 	messageElement.textContent = message;
 	messageElement.classList.toggle('is-error', isError);
+
+	if (message && shouldFade) {
+		messageElement.classList.add('is-bubble');
+		messageElement.klaviyoFadeTimer = window.setTimeout(() => {
+			messageElement.textContent = '';
+			messageElement.classList.remove('is-error', 'is-bubble');
+		}, 2100);
+	}
+};
+
+const isLocalKlaviyoPreview = () => {
+	const localHosts = ['localhost', '127.0.0.1', '::1'];
+
+	return window.location.protocol === 'file:' || localHosts.includes(window.location.hostname);
 };
 
 const subscribeToKlaviyoList = async (email, listId) => {
+	if (isLocalKlaviyoPreview()) {
+		return;
+	}
+
 	const companyId = window.CrossWearKlaviyoCompanyId;
 	const response = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${encodeURIComponent(companyId)}`, {
 		method: 'POST',
@@ -148,10 +168,12 @@ const openKlaviyoSignupModal = (trigger) => {
 	const form = modal.querySelector('.klaviyo-signup-form');
 	const input = modal.querySelector('.klaviyo-signup-input');
 	const submit = modal.querySelector('.klaviyo-signup-submit');
+	const notice = modal.querySelector('.klaviyo-success-notice');
 	const listId = (trigger.dataset.klaviyoListId || window.CrossWearKlaviyoListId || '').trim();
 
 	form.dataset.klaviyoListId = listId;
 	form.reset();
+	notice.hidden = true;
 	submit.disabled = !listId;
 	submit.textContent = 'Join Mailing List';
 	setKlaviyoSignupMessage(modal, listId ? '' : 'Mailing list is not configured.', !listId);
@@ -181,8 +203,15 @@ document.addEventListener('submit', async (event) => {
 	const email = input.value.trim();
 	const listId = form.dataset.klaviyoListId;
 
-	if (!email || !input.checkValidity()) {
-		setKlaviyoSignupMessage(modal, 'Enter a valid email address.', true);
+	if (!email) {
+		setKlaviyoSignupMessage(modal, 'Enter your email address to join.', true, true);
+		input.focus({ preventScroll: true });
+		return;
+	}
+
+	if (!input.checkValidity()) {
+		setKlaviyoSignupMessage(modal, 'Enter a valid email address.', true, true);
+		input.focus({ preventScroll: true });
 		return;
 	}
 
