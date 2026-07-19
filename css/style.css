@@ -2550,6 +2550,23 @@ body.about-background .about-hero {
     -webkit-text-fill-color: rgba(255, 246, 202, 0.62);
 }
 
+.klaviyo-signup-input:-webkit-autofill,
+.klaviyo-signup-input:-webkit-autofill:hover,
+.klaviyo-signup-input:-webkit-autofill:focus {
+    border-color: rgba(255, 228, 154, 0.56);
+    box-shadow: 0 0 0 1000px rgba(18, 18, 18, 0.96) inset, inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 18px rgba(17, 17, 17, 0.14);
+    caret-color: var(--luxury-clean-gold);
+    color: var(--luxury-clean-gold);
+    -webkit-text-fill-color: var(--luxury-clean-gold);
+}
+
+.klaviyo-signup-input:autofill {
+    border-color: rgba(255, 228, 154, 0.56);
+    box-shadow: 0 0 0 1000px rgba(18, 18, 18, 0.96) inset, inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 18px rgba(17, 17, 17, 0.14);
+    caret-color: var(--luxury-clean-gold);
+    color: var(--luxury-clean-gold);
+}
+
 .klaviyo-signup-input:focus-visible {
     border-color: rgba(255, 228, 154, 0.68);
     outline: 2px solid rgba(255, 228, 154, 0.28);
