@@ -17,6 +17,8 @@ exports.handler = async (event) => {
     return jsonResponse(405, { error: 'Method not allowed.' });
   }
 
+  const showDebug = event.queryStringParameters?.debug === '1';
+
   try {
     connectInventoryStore(event);
 
@@ -25,6 +27,21 @@ exports.handler = async (event) => {
     return jsonResponse(200, inventory);
   } catch (error) {
     console.error('Inventory status error:', error);
+
+    if (showDebug) {
+      return jsonResponse(500, {
+        error: 'Unable to load inventory.',
+        debug: {
+          name: error.name,
+          message: error.message,
+          hasBlobsPayload: Boolean(event.blobs),
+          hasBlobsContext: Boolean(process.env.NETLIFY_BLOBS_CONTEXT),
+          hasSiteId: Boolean(process.env.SITE_ID),
+          nodeVersion: process.version
+        }
+      });
+    }
+
     return jsonResponse(500, { error: 'Unable to load inventory.' });
   }
 };
