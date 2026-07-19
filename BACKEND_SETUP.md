@@ -22,6 +22,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_test_webhook_secret
 SITE_URL=http://localhost:8888
 STRIPE_CURRENCY=cad
 CHECKOUT_RESERVATION_SECONDS=1800
+RESTOCK_ADMIN_TOKEN=use_a_long_random_private_token_here
 ```
 
 5. Start the Netlify dev server:
@@ -42,6 +43,7 @@ STRIPE_WEBHOOK_SECRET=whsec_live_or_test_webhook_secret_from_stripe
 SITE_URL=https://jesuscrosswear.ca
 STRIPE_CURRENCY=cad
 CHECKOUT_RESERVATION_SECONDS=1800
+RESTOCK_ADMIN_TOKEN=use_a_long_random_private_token_here
 ```
 
 Do not commit `.env` or paste secret keys into chat.
@@ -56,6 +58,33 @@ Do not commit `.env` or paste secret keys into chat.
 - The thank-you page also verifies a returned Stripe `session_id` if one is present. This is a backup path if Stripe webhook delivery is delayed.
 - If Stripe reports the checkout as expired or failed, the reservation is released.
 - If the visible frontend stock is changed by a visitor, Stripe Checkout still uses backend prices and backend stock checks.
+
+## Restocking Inventory
+
+Set `RESTOCK_ADMIN_TOKEN` in Netlify to a long private value before using the restock endpoint. Keep that value out of Git and out of chat.
+
+Accepted product names are `I AM`, `Jesus`, `Saved`, `Ezekiel 36:26`, `Matthew 11:28`, `John 14:30`, and `Luke 17:21`. Accepted sizes are `L`, `XL`, or `all`.
+
+Set `$amount` to the exact number you want to add. For example, use `39`, `50`, or any other whole number you are restocking.
+
+To add stock to one product/size, run this in PowerShell with your private token typed locally:
+
+```powershell
+$token = "your-private-restock-token"
+$amount = 39
+$body = @{ product = "Jesus"; size = "L"; quantity = $amount } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "https://jesuscrosswear.ca/api/restock-inventory" -Headers @{ Authorization = "Bearer $token" } -ContentType "application/json" -Body $body
+```
+
+To add that same quantity to every size for a product, use `size = "all"`:
+
+```powershell
+$amount = 39
+$body = @{ product = "Jesus"; size = "all"; quantity = $amount } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "https://jesuscrosswear.ca/api/restock-inventory" -Headers @{ Authorization = "Bearer $token" } -ContentType "application/json" -Body $body
+```
+
+Restocking increases `stock` only. It does not erase sold inventory or active reservations.
 
 ## Stripe Webhook Setup
 

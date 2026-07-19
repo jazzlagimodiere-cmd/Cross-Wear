@@ -1809,10 +1809,12 @@ body.about-background .about-hero {
 .klaviyo-signup-message {
     position: absolute;
     left: 50%;
-    top: 58%;
+    top: auto;
+    bottom: 34px;
     z-index: 3;
     width: min(calc(100% - 28px), 420px);
     min-height: 0;
+    margin: 0;
     opacity: 0;
     pointer-events: none;
     transform: translate(-50%, -50%);

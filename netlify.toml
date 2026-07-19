@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/restock-inventory"
+  to = "/.netlify/functions/restock-inventory"
+  status = 200
+
+[[redirects]]
   from = "/api/confirm-checkout-session"
   to = "/.netlify/functions/confirm-checkout-session"
   status = 200

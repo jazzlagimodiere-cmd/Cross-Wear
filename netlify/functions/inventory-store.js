@@ -6,6 +6,7 @@ const inventoryKey = 'inventory-v2';
 const configuredReservationSeconds = Number(process.env.CHECKOUT_RESERVATION_SECONDS || 30 * 60);
 const signatureInitialStock = 10;
 const scriptureInitialStock = 24;
+const maxRestockQuantity = 5000;
 const reservationSeconds = Number.isInteger(configuredReservationSeconds) && configuredReservationSeconds >= 1800 ? configuredReservationSeconds : 30 * 60;
 
 class InventoryError extends Error {
@@ -87,6 +88,16 @@ const isSkippedInventoryWrite = (result) => Boolean(result?.skipInventoryWrite);
 
 const normalizeSize = (size) => String(size || '').trim().toUpperCase();
 
+const resolveProductName = (name) => {
+  const normalizedName = String(name || '').trim();
+
+  if (!normalizedName) {
+    return '';
+  }
+
+  return Object.keys(products).find((productName) => productName.toLowerCase() === normalizedName.toLowerCase()) || normalizedName;
+};
+
 const getVariantKey = (name, size) => `${name}|${normalizeSize(size)}`;
 
 const getInitialStock = (product) => Number.isInteger(product.initialStock) ? product.initialStock : 0;
@@ -95,6 +106,16 @@ const sanitizeQuantity = (quantity) => {
   const parsedQuantity = Number(quantity);
 
   if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 10) {
+    return null;
+  }
+
+  return parsedQuantity;
+};
+
+const sanitizeRestockQuantity = (quantity) => {
+  const parsedQuantity = Number(quantity);
+
+  if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > maxRestockQuantity) {
     return null;
   }
 
@@ -303,6 +324,68 @@ const normalizeOrderItems = (items) => {
   return [...aggregatedItems.values()];
 };
 
+const normalizeRestockItems = (items) => {
+  if (!Array.isArray(items) || !items.length) {
+    throw new InventoryError('No valid restock items were provided.', 400);
+  }
+
+  const aggregatedItems = new Map();
+
+  items.forEach((item) => {
+    const requestedItem = item || {};
+    const name = resolveProductName(requestedItem.name || requestedItem.product);
+    const product = products[name];
+    const size = normalizeSize(requestedItem.size);
+    const quantity = sanitizeRestockQuantity(requestedItem.quantity);
+
+    if (!product) {
+      throw new InventoryError('Unknown restock product.', 400, {
+        product: name,
+        allowedProducts: Object.keys(products)
+      });
+    }
+
+    if (!product.allowedSizes.includes(size)) {
+      throw new InventoryError('Invalid restock size.', 400, {
+        product: name,
+        size,
+        allowedSizes: product.allowedSizes
+      });
+    }
+
+    if (!quantity) {
+      throw new InventoryError('Invalid restock quantity.', 400, {
+        maxQuantity: maxRestockQuantity
+      });
+    }
+
+    const variantKey = getVariantKey(name, size);
+    const existingItem = aggregatedItems.get(variantKey);
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+
+      if (existingItem.quantity > maxRestockQuantity) {
+        throw new InventoryError('Restock quantity is too large.', 400, {
+          maxQuantity: maxRestockQuantity
+        });
+      }
+
+      return;
+    }
+
+    aggregatedItems.set(variantKey, {
+      name,
+      displayName: product.displayName,
+      size,
+      quantity,
+      variantKey
+    });
+  });
+
+  return [...aggregatedItems.values()];
+};
+
 const reserveInventory = async (orderItems) => {
   if (!orderItems.length) {
     throw new InventoryError('No valid preorder items were provided.', 400);
@@ -405,6 +488,39 @@ const releaseReservation = async (reservationId, reason = 'released') => {
   });
 };
 
+const restockInventory = async (restockItems) => {
+  const normalizedItems = normalizeRestockItems(restockItems);
+
+  return mutateInventory((inventory, now) => {
+    const before = getAvailabilitySnapshot(inventory, now);
+
+    normalizedItems.forEach((item) => {
+      inventory.variants[item.variantKey].stock += item.quantity;
+    });
+
+    const after = getAvailabilitySnapshot(inventory, now);
+
+    return {
+      updatedAt: new Date(now).toISOString(),
+      items: normalizedItems.map((item) => ({
+        name: item.name,
+        displayName: item.displayName,
+        size: item.size,
+        variantKey: item.variantKey,
+        added: item.quantity,
+        stock: {
+          before: before[item.variantKey]?.stock || 0,
+          after: after[item.variantKey]?.stock || 0
+        },
+        available: {
+          before: before[item.variantKey]?.available || 0,
+          after: after[item.variantKey]?.available || 0
+        }
+      }))
+    };
+  });
+};
+
 const getInventoryStatus = async () => {
   const store = getInventoryStore();
   const entry = await readInventoryEntry(store);
@@ -440,5 +556,6 @@ module.exports = {
   normalizeOrderItems,
   products,
   releaseReservation,
+  restockInventory,
   reserveInventory
 };
