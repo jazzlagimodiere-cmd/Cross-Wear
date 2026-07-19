@@ -127,6 +127,7 @@ document.addEventListener('submit', async (event) => {
 	}
 
 	event.preventDefault();
+	event.stopPropagation();
 
 	const modal = form.closest('.klaviyo-signup-modal');
 	const input = form.querySelector('.klaviyo-signup-input');
@@ -162,13 +163,8 @@ document.addEventListener('click', (event) => {
 		return;
 	}
 
-	const formId = (trigger.dataset.klaviyoFormId || window.CrossWearKlaviyoFormId || '').trim();
-
-	if (formId) {
-		window._klOnsite = window._klOnsite || [];
-		window._klOnsite.push(['openForm', formId]);
-		return;
-	}
+	event.preventDefault();
+	event.stopImmediatePropagation();
 
 	openKlaviyoSignupModal(trigger);
-});
+}, true);
