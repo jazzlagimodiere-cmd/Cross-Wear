@@ -1,9 +1,8 @@
 const Stripe = require('stripe');
 const {
-  completeReservation,
-  connectInventoryStore,
-  InventoryError
-} = require('./inventory-store');
+  completePaidSessionInventory,
+  isPreorderSession
+} = require('./checkout-session-inventory');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
@@ -26,32 +25,6 @@ const redirectResponse = (location) => ({
   body: ''
 });
 
-const getReservationId = (session) => session?.metadata?.reservation_id || session?.client_reference_id || '';
-
-const confirmationRetryDelays = [1000, 2000, 3000, 5000, 8000];
-
-const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-const completePaidReservation = async (event, reservationId, stripeSessionId) => {
-  connectInventoryStore(event);
-
-  for (let attempt = 0; attempt <= confirmationRetryDelays.length; attempt += 1) {
-    try {
-      return await completeReservation(reservationId, stripeSessionId);
-    } catch (error) {
-      const shouldRetry = error instanceof InventoryError && error.details?.retryable && attempt < confirmationRetryDelays.length;
-
-      if (!shouldRetry) {
-        throw error;
-      }
-
-      await delay(confirmationRetryDelays[attempt]);
-    }
-  }
-
-  return { completed: false };
-};
-
 const confirmCheckoutSession = async (event, sessionId) => {
   if (!stripe) {
     return { ok: false, statusCode: 500, body: { error: 'Checkout confirmation is temporarily unavailable.' } };
@@ -63,9 +36,8 @@ const confirmCheckoutSession = async (event, sessionId) => {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const reservationId = getReservationId(session);
 
-    if (session.metadata?.order_type !== 'preorder' || !reservationId) {
+    if (!isPreorderSession(session)) {
       return { ok: false, statusCode: 400, body: { error: 'Checkout session is not linked to a preorder.' } };
     }
 
@@ -73,7 +45,7 @@ const confirmCheckoutSession = async (event, sessionId) => {
       return { ok: false, statusCode: 202, body: { confirmed: false, status: session.payment_status } };
     }
 
-    await completePaidReservation(event, reservationId, session.id);
+    await completePaidSessionInventory(stripe, event, session);
 
     return { ok: true, statusCode: 200, body: { confirmed: true } };
   } catch (error) {

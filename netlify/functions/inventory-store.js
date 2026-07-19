@@ -88,6 +88,18 @@ const isSkippedInventoryWrite = (result) => Boolean(result?.skipInventoryWrite);
 
 const normalizeSize = (size) => String(size || '').trim().toUpperCase();
 
+const getCompletedStripeSession = (inventory, stripeSessionId, ignoredReservationId = '') => {
+  if (!stripeSessionId) {
+    return null;
+  }
+
+  const completedEntry = Object.entries(inventory.reservations).find(([reservationId, reservation]) => {
+    return reservationId !== ignoredReservationId && reservation?.status === 'completed' && reservation.stripeSessionId === stripeSessionId;
+  });
+
+  return completedEntry?.[1] || null;
+};
+
 const resolveProductName = (name) => {
   const normalizedName = String(name || '').trim();
 
@@ -450,6 +462,16 @@ const completeReservation = async (reservationId, stripeSessionId) => {
       return skipInventoryWrite({ completed: true, alreadyCompleted: true });
     }
 
+    const completedStripeSession = getCompletedStripeSession(inventory, stripeSessionId, reservationId);
+
+    if (completedStripeSession) {
+      reservation.status = 'completed';
+      reservation.completedAt = completedStripeSession.completedAt || new Date(now).toISOString();
+      reservation.stripeSessionId = stripeSessionId;
+
+      return { completed: true, alreadyCompleted: true };
+    }
+
     reservation.items.forEach((item) => {
       const variant = inventory.variants[item.variantKey];
 
@@ -463,6 +485,54 @@ const completeReservation = async (reservationId, stripeSessionId) => {
     reservation.stripeSessionId = stripeSessionId || reservation.stripeSessionId || null;
 
     return { completed: true };
+  });
+};
+
+const completeRecoveredOrder = async (orderItems, stripeSessionId) => {
+  if (!stripeSessionId) {
+    throw new InventoryError('Checkout session is missing.', 400);
+  }
+
+  const normalizedItems = normalizeOrderItems(orderItems);
+
+  if (!normalizedItems.length) {
+    throw new InventoryError('Paid checkout did not contain recoverable preorder items.', 409);
+  }
+
+  return mutateInventory((inventory, now) => {
+    const completedStripeSession = getCompletedStripeSession(inventory, stripeSessionId);
+
+    if (completedStripeSession) {
+      return skipInventoryWrite({ completed: true, alreadyCompleted: true, recovered: Boolean(completedStripeSession.recovered) });
+    }
+
+    const completedAt = new Date(now).toISOString();
+    const recoveredReservationId = `stripe:${stripeSessionId}`;
+
+    normalizedItems.forEach((item) => {
+      const variant = inventory.variants[item.variantKey];
+
+      if (variant) {
+        variant.sold += item.quantity;
+      }
+    });
+
+    inventory.reservations[recoveredReservationId] = {
+      id: recoveredReservationId,
+      status: 'completed',
+      recovered: true,
+      createdAt: completedAt,
+      completedAt,
+      stripeSessionId,
+      items: normalizedItems.map((item) => ({
+        name: item.name,
+        size: item.size,
+        quantity: item.quantity,
+        variantKey: item.variantKey
+      }))
+    };
+
+    return { completed: true, recovered: true };
   });
 };
 
@@ -549,6 +619,7 @@ const getInventoryStatus = async () => {
 
 module.exports = {
   InventoryError,
+  completeRecoveredOrder,
   completeReservation,
   connectInventoryStore,
   getInventoryStatus,

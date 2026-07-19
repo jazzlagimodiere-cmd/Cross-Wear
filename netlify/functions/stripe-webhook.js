@@ -1,9 +1,12 @@
 const Stripe = require('stripe');
 const {
-  completeReservation,
-  connectInventoryStore,
   releaseReservation
 } = require('./inventory-store');
+const {
+  completePaidSessionInventory,
+  getReservationId,
+  isPreorderSession
+} = require('./checkout-session-inventory');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -32,8 +35,6 @@ const getRawBody = (event) => {
   return event.body || '';
 };
 
-const getReservationId = (session) => session?.metadata?.reservation_id || session?.client_reference_id || '';
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
@@ -57,10 +58,10 @@ exports.handler = async (event) => {
   const reservationId = getReservationId(session);
 
   try {
-    connectInventoryStore(event);
-
     if (stripeEvent.type === 'checkout.session.completed' || stripeEvent.type === 'checkout.session.async_payment_succeeded') {
-      await completeReservation(reservationId, session.id);
+      if (isPreorderSession(session)) {
+        await completePaidSessionInventory(stripe, event, session);
+      }
     }
 
     if (stripeEvent.type === 'checkout.session.expired') {
