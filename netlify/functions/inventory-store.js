@@ -62,7 +62,13 @@ const products = {
   }
 };
 
-const getInventoryStore = () => getStore(inventoryStoreName);
+const getInventoryStore = () => {
+  if (process.env.SITE_ID) {
+    return getStore(inventoryStoreName, { siteID: process.env.SITE_ID });
+  }
+
+  return getStore(inventoryStoreName);
+};
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
