@@ -1598,7 +1598,8 @@ body.about-background .about-hero {
     margin: 10px 0 0;
 }
 
-.klaviyo-signup-modal {
+.klaviyo-signup-modal,
+.klaviyo-success-modal {
     position: fixed;
     inset: 50% auto auto 50%;
     width: min(480px, calc(100vw - 32px));
@@ -1609,7 +1610,8 @@ body.about-background .about-hero {
     transform: translate(-50%, -50%);
 }
 
-.klaviyo-signup-modal::backdrop {
+.klaviyo-signup-modal::backdrop,
+.klaviyo-success-modal::backdrop {
     background: rgba(32, 24, 12, 0.34);
     backdrop-filter: blur(3px);
 }
@@ -1724,6 +1726,77 @@ body.about-background .about-hero {
 
 .klaviyo-signup-message.is-error {
     color: #8f2f1c;
+}
+
+.klaviyo-success-panel {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    width: 100%;
+    margin: 0;
+    padding: 24px 20px;
+    border: 1px solid rgba(143, 100, 28, 0.3);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(242, 215, 131, 0.28), rgba(242, 215, 131, 0) 42%),
+        rgba(255, 252, 244, 0.98);
+    box-shadow: 0 24px 70px rgba(89, 65, 25, 0.3);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.klaviyo-success-panel.is-nudging {
+    animation: klaviyo-modal-nudge 260ms ease;
+}
+
+.klaviyo-success-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(143, 100, 28, 0.32);
+    border-radius: 999px;
+    color: #8f641c;
+    font-size: 25px;
+    line-height: 1;
+}
+
+.klaviyo-success-panel h2 {
+    margin: 0;
+    color: #8f641c;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(26px, 5vw, 34px);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.klaviyo-success-panel p {
+    margin: 0;
+    color: #4d402a;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.klaviyo-success-close {
+    margin-top: 4px;
+}
+
+@keyframes klaviyo-modal-nudge {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    22% {
+        transform: translateX(-7px);
+    }
+
+    46% {
+        transform: translateX(7px);
+    }
+
+    70% {
+        transform: translateX(-4px);
+    }
 }
 
 .image-viewer-modal {
