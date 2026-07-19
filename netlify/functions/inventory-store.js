@@ -145,8 +145,7 @@ const normalizeInventory = (inventory) => {
 
 const readInventoryEntry = async (store) => {
   const entry = await store.getWithMetadata(inventoryKey, {
-    type: 'json',
-    consistency: 'strong'
+    type: 'json'
   });
 
   if (entry) {
@@ -167,8 +166,7 @@ const readInventoryEntry = async (store) => {
   }
 
   const createdEntry = await store.getWithMetadata(inventoryKey, {
-    type: 'json',
-    consistency: 'strong'
+    type: 'json'
   });
 
   return {
