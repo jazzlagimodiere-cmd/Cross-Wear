@@ -1,4 +1,7 @@
-const { getInventoryStatus } = require('./inventory-store');
+const {
+  connectInventoryStore,
+  getInventoryStatus
+} = require('./inventory-store');
 
 const jsonResponse = (statusCode, body) => ({
   statusCode,
@@ -15,6 +18,8 @@ exports.handler = async (event) => {
   }
 
   try {
+    connectInventoryStore(event);
+
     const inventory = await getInventoryStatus();
 
     return jsonResponse(200, inventory);

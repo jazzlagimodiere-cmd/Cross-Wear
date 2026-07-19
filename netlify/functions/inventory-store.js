@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { getStore } = require('@netlify/blobs');
+const { connectLambda, getStore } = require('@netlify/blobs');
 
 const inventoryStoreName = 'cross-wear-inventory';
 const inventoryKey = 'inventory-v1';
@@ -68,6 +68,12 @@ const getInventoryStore = () => {
   }
 
   return getStore(inventoryStoreName);
+};
+
+const connectInventoryStore = (event) => {
+  if (event?.blobs && typeof connectLambda === 'function') {
+    connectLambda(event);
+  }
 };
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -422,6 +428,7 @@ const getInventoryStatus = async () => {
 module.exports = {
   InventoryError,
   completeReservation,
+  connectInventoryStore,
   getInventoryStatus,
   getVariantKey,
   normalizeOrderItems,

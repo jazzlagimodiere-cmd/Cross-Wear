@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 const {
   InventoryError,
+  connectInventoryStore,
   normalizeOrderItems,
   releaseReservation,
   reserveInventory,
@@ -94,6 +95,8 @@ exports.handler = async (event) => {
   let reservation;
 
   try {
+    connectInventoryStore(event);
+
     reservation = await reserveInventory(orderItems);
   } catch (error) {
     if (error instanceof InventoryError) {

@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 const {
   completeReservation,
+  connectInventoryStore,
   releaseReservation
 } = require('./inventory-store');
 
@@ -56,6 +57,8 @@ exports.handler = async (event) => {
   const reservationId = getReservationId(session);
 
   try {
+    connectInventoryStore(event);
+
     if (stripeEvent.type === 'checkout.session.completed' || stripeEvent.type === 'checkout.session.async_payment_succeeded') {
       await completeReservation(reservationId, session.id);
     }
