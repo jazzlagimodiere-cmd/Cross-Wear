@@ -68,14 +68,7 @@ const subscribeToKlaviyoList = async (email, listId) => {
 						data: {
 							type: 'profile',
 							attributes: {
-								email,
-								subscriptions: {
-									email: {
-										marketing: {
-											consent: 'SUBSCRIBED'
-										}
-									}
-								}
+								email
 							}
 						}
 					}
