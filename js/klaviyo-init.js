@@ -51,7 +51,7 @@ const getKlaviyoSignupModal = () => {
 	});
 	modal.querySelector('.klaviyo-success-notice-close').addEventListener('click', () => {
 		modal.querySelector('.klaviyo-success-notice').hidden = true;
-		modal.querySelector('.klaviyo-signup-close').focus({ preventScroll: true });
+		modal.close();
 	});
 	modal.addEventListener('click', (event) => {
 		if (event.target === modal) {
