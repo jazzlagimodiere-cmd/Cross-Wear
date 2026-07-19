@@ -54,8 +54,6 @@ const imageViewerModal = document.querySelector('#image-viewer-modal');
 const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
 const imageViewerClose = document.querySelector('.image-viewer-close');
-const mockupNoticeModal = document.querySelector('#mockup-notice-modal');
-const mockupNoticeOkay = document.querySelector('.mockup-notice-okay');
 const unitPrice = 65.00;
 const defaultVariantStock = 10;
 const inventoryOverrides = {};
@@ -67,7 +65,6 @@ let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
 const signaturePreviewTapMoveThreshold = 8;
 let activeSignaturePreviewInteraction = null;
-let pendingMockupNoticeAction = null;
 const pointerHandledSignaturePreviewButtons = new WeakSet();
 
 const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -106,49 +103,6 @@ const preloadImageAfterLoad = (src) => {
     window.addEventListener('load', preloadWhenIdle, { once: true });
 };
 
-const showMockupNotice = (action) => {
-    if (!mockupNoticeModal || !mockupNoticeOkay) {
-        action?.();
-        return;
-    }
-
-    pendingMockupNoticeAction = action;
-
-    if (typeof mockupNoticeModal.showModal === 'function' && !mockupNoticeModal.open) {
-        mockupNoticeModal.showModal();
-    } else {
-        mockupNoticeModal.setAttribute('open', '');
-    }
-
-    mockupNoticeOkay.focus();
-};
-
-const closeMockupNotice = (shouldRunAction = false) => {
-    const action = shouldRunAction ? pendingMockupNoticeAction : null;
-    pendingMockupNoticeAction = null;
-
-    if (mockupNoticeModal?.open && typeof mockupNoticeModal.close === 'function') {
-        mockupNoticeModal.close();
-    } else {
-        mockupNoticeModal?.removeAttribute('open');
-    }
-
-    if (action) {
-        window.setTimeout(action, 0);
-    }
-};
-
-mockupNoticeOkay?.addEventListener('click', () => closeMockupNotice(true));
-
-mockupNoticeModal?.addEventListener('click', (event) => {
-    if (event.target === mockupNoticeModal) {
-        closeMockupNotice(false);
-    }
-});
-
-mockupNoticeModal?.addEventListener('close', () => {
-    pendingMockupNoticeAction = null;
-});
 
 const resetSignaturePreviewPan = (button) => {
     button.style.setProperty('--signature-preview-pan-x', '0px');
@@ -275,7 +229,7 @@ const openSignatureImageViewer = (button) => {
     }
 
     closeSignaturePreviews();
-    showMockupNotice(() => openImageViewer(gallery));
+    openImageViewer(gallery);
 };
 
 const keyboardHandledSignaturePreviewButtons = new WeakSet();
@@ -581,7 +535,7 @@ document.querySelectorAll('.product-image-trigger').forEach((trigger) => {
         const gallery = productGalleries.get(slider);
 
         if (gallery) {
-            showMockupNotice(() => openImageViewer(gallery));
+            openImageViewer(gallery);
         }
     });
 });
