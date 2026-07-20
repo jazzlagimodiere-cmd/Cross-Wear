@@ -78,10 +78,10 @@ const cartItems = [];
 const availabilityUpdaters = [];
 const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
-// The /api/cancel-checkout-session rewrite in netlify.toml has proven
-// unreliable at forwarding the query string and POST body through to the
-// function (confirmed via repeated direct testing), which silently broke
-// reservation release. Calling the function directly sidesteps the redirect.
+// Calling the function directly (bypassing the /api/ rewrite) avoids one
+// extra hop; the real fix for release reliability is the retry-on-"missing"
+// logic in releaseReservation, which accounts for brief write-propagation lag
+// in the inventory store right after a reservation is created.
 const checkoutCancelUrl = '/.netlify/functions/cancel-checkout-session';
 const checkoutConfirmUrl = '/api/confirm-checkout-session';
 const stripeConfigUrl = '/api/stripe-config';
@@ -844,21 +844,17 @@ const releaseReservationById = async (reservationId) => {
         return;
     }
 
-    // Retry a few times (with a short delay) so a transient network hiccup or
-    // inventory-store write conflict doesn't leave a reservation locked
-    // against inventory for the full TTL while the customer has already
-    // moved on to a new checkout attempt. The server retries internally too,
-    // but under brief write contention it can still fail once - a short
-    // client-side backoff avoids immediately repeating into the same
-    // conflict window.
+    // Retry a few times (with a short delay) so a transient network hiccup,
+    // inventory-store write conflict, or a reservation that isn't visible yet
+    // due to brief write-propagation lag (the customer backed out within a
+    // second or two of the reservation being created) doesn't leave it locked
+    // against inventory for the full TTL. The server retries internally too,
+    // but a short client-side backoff adds extra headroom for that lag.
     const maxAttempts = 3;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         try {
-            // Send the reservation id in the request body (not just the query
-            // string) since the /api/cancel-checkout-session rewrite does not
-            // reliably forward query strings through to the function.
-            const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
+            const response = await fetch(checkoutCancelUrl, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -870,7 +866,15 @@ const releaseReservationById = async (reservationId) => {
             });
 
             if (response.ok) {
-                return;
+                const result = await response.json().catch(() => null);
+
+                // A 200 with status "missing" can mean the reservation
+                // genuinely doesn't exist, but it can also mean this read
+                // raced the reservation's own creation - retry rather than
+                // silently accepting that as success.
+                if (!result || result.status !== 'missing') {
+                    return;
+                }
             }
         } catch (error) {
             // Fall through to retry (or give up after the final attempt); the
@@ -1459,11 +1463,10 @@ window.addEventListener('pagehide', () => {
     const reservationId = activeCheckoutReservationId;
 
     try {
-        // Send the reservation id as a JSON body (not just the query string)
-        // since the /api/cancel-checkout-session rewrite does not reliably
-        // forward query strings through to the function.
+        // sendBeacon requires the payload as the request body; the server
+        // reads reservation_id from the parsed JSON body.
         const beaconBody = new Blob([JSON.stringify({ reservation_id: reservationId })], { type: 'application/json' });
-        navigator.sendBeacon(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, beaconBody);
+        navigator.sendBeacon(checkoutCancelUrl, beaconBody);
     } catch (error) {
         // Best effort; the reservation will still expire on its own.
     }

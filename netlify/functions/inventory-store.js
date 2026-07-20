@@ -547,7 +547,7 @@ const releaseReservation = async (reservationId, reason = 'released') => {
     return { released: false };
   }
 
-  return mutateInventory((inventory, now) => {
+  const attemptRelease = () => mutateInventory((inventory, now) => {
     const reservation = inventory.reservations[reservationId];
 
     if (!reservation) {
@@ -568,6 +568,25 @@ const releaseReservation = async (reservationId, reason = 'released') => {
 
     return { released: true, status: reservation.status };
   });
+
+  // A reservation that was created moments ago may not be visible yet on this
+  // read due to the blob store's brief write-propagation delay - a customer
+  // who backs out of checkout within a second or two of opening it can race
+  // this. Since "missing" looks identical to a genuinely nonexistent
+  // reservation, retry a few times with a short delay before giving up so a
+  // real release request isn't silently dropped and left locked for the full
+  // reservation TTL.
+  const maxAttempts = 4;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const result = await attemptRelease();
+
+    if (result.status !== 'missing' || attempt === maxAttempts - 1) {
+      return result;
+    }
+
+    await delay(300 * (attempt + 1));
+  }
 };
 
 const restockInventory = async (restockItems) => {
