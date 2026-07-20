@@ -2131,7 +2131,8 @@ body.about-background .about-hero {
 }
 
 .cart-close,
-.preorder-confirm-close {
+.preorder-confirm-close,
+.stripe-checkout-close {
     border: none;
     border-radius: var(--luxury-button-radius);
     background: var(--luxury-button-bg);
@@ -2151,7 +2152,9 @@ body.about-background .about-hero {
 .cart-close:hover,
 .cart-close:focus-visible,
 .preorder-confirm-close:hover,
-.preorder-confirm-close:focus-visible {
+.preorder-confirm-close:focus-visible,
+.stripe-checkout-close:hover,
+.stripe-checkout-close:focus-visible {
     outline: none;
     transform: translateY(-1px);
 }
@@ -2182,13 +2185,48 @@ body.about-background .about-hero {
     margin-top: 18px;
 }
 
-.preorder-checkout-mount {
-    margin-top: 18px;
-    min-height: 420px;
+.stripe-checkout-modal {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    width: min(560px, calc(100vw - 28px));
 }
 
-.preorder-confirm-modal:has(.preorder-checkout-mount:not([hidden])) {
-    width: min(560px, calc(100vw - 28px));
+.stripe-checkout-modal::backdrop {
+    background: rgba(32, 24, 12, 0.34);
+    backdrop-filter: blur(3px);
+}
+
+.stripe-checkout-panel {
+    border: 1px solid rgba(143, 100, 28, 0.34);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 15% 0%, rgba(242, 215, 131, 0.22), rgba(242, 215, 131, 0) 38%),
+        rgba(255, 252, 244, 0.96);
+    box-shadow: 0 24px 70px rgba(89, 65, 25, 0.24);
+    color: #21180c;
+    padding: 22px;
+    max-height: min(88vh, 780px);
+    overflow-y: auto;
+}
+
+.stripe-checkout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.stripe-checkout-header h2 {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 28px;
+    font-weight: 500;
+}
+
+.stripe-checkout-mount {
+    min-height: 480px;
 }
 
 .preorder-confirm-back,

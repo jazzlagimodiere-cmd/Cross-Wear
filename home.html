@@ -572,7 +572,16 @@
                 <button class="preorder-confirm-back" type="button">Review Cart</button>
                 <button class="preorder-confirm-continue" type="button">Agree and Continue</button>
             </div>
-            <div class="preorder-checkout-mount" id="preorder-checkout-mount" hidden></div>
+        </div>
+    </dialog>
+
+    <dialog class="stripe-checkout-modal" id="stripe-checkout-modal" aria-labelledby="stripe-checkout-title">
+        <div class="stripe-checkout-panel">
+            <div class="stripe-checkout-header">
+                <h2 id="stripe-checkout-title">Secure Checkout</h2>
+                <button class="stripe-checkout-close small-action-button" type="button">Close</button>
+            </div>
+            <div class="stripe-checkout-mount" id="stripe-checkout-mount"></div>
         </div>
     </dialog>
 

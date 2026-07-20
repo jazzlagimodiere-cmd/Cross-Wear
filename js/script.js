@@ -51,10 +51,10 @@ const preorderConfirmModal = document.querySelector('#preorder-confirm-modal');
 const preorderConfirmClose = document.querySelector('.preorder-confirm-close');
 const preorderConfirmBack = document.querySelector('.preorder-confirm-back');
 const preorderConfirmContinue = document.querySelector('.preorder-confirm-continue');
-const preorderConfirmCopy = document.querySelector('.preorder-confirm-copy');
 const preorderConfirmSummary = document.querySelector('.preorder-confirm-summary');
-const preorderConfirmActions = document.querySelector('.preorder-confirm-actions');
-const preorderCheckoutMount = document.querySelector('#preorder-checkout-mount');
+const stripeCheckoutModal = document.querySelector('#stripe-checkout-modal');
+const stripeCheckoutClose = document.querySelector('.stripe-checkout-close');
+const stripeCheckoutMount = document.querySelector('#stripe-checkout-mount');
 const imageViewerModal = document.querySelector('#image-viewer-modal');
 const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
@@ -792,21 +792,28 @@ const getStripeClient = async () => {
     }
 };
 
-const showEmbeddedCheckoutView = () => {
-    preorderConfirmCopy?.setAttribute('hidden', '');
-    preorderConfirmSummary?.setAttribute('hidden', '');
-    preorderConfirmActions?.setAttribute('hidden', '');
-    preorderCheckoutMount?.removeAttribute('hidden');
+const openStripeCheckoutModal = () => {
+    if (!stripeCheckoutModal) {
+        return;
+    }
+
+    if (typeof stripeCheckoutModal.showModal === 'function' && !stripeCheckoutModal.open) {
+        stripeCheckoutModal.showModal();
+    } else {
+        stripeCheckoutModal.setAttribute('open', '');
+    }
 };
 
-const showPreorderConfirmView = () => {
-    preorderConfirmCopy?.removeAttribute('hidden');
-    preorderConfirmSummary?.removeAttribute('hidden');
-    preorderConfirmActions?.removeAttribute('hidden');
-    preorderCheckoutMount?.setAttribute('hidden', '');
+const closeStripeCheckoutModal = () => {
+    if (!stripeCheckoutModal) {
+        return;
+    }
 
-    if (preorderCheckoutMount) {
-        preorderCheckoutMount.innerHTML = '';
+    if (stripeCheckoutModal.open && typeof stripeCheckoutModal.close === 'function') {
+        stripeCheckoutModal.close();
+    } else {
+        stripeCheckoutModal.removeAttribute('open');
+        cancelActiveCheckout();
     }
 };
 
@@ -822,6 +829,10 @@ const destroyActiveEmbeddedCheckout = () => {
     }
 
     activeEmbeddedCheckout = null;
+
+    if (stripeCheckoutMount) {
+        stripeCheckoutMount.innerHTML = '';
+    }
 };
 
 const releaseActiveCheckoutReservation = async () => {
@@ -854,7 +865,6 @@ const cancelActiveCheckout = () => {
     }
 
     destroyActiveEmbeddedCheckout();
-    showPreorderConfirmView();
     activeCheckoutSessionId = '';
     releaseActiveCheckoutReservation();
 };
@@ -1183,8 +1193,6 @@ if (cartClear) {
 }
 
 const closePreorderConfirmModal = ({ reopenCart = false } = {}) => {
-    cancelActiveCheckout();
-
     if (preorderConfirmModal?.open && typeof preorderConfirmModal.close === 'function') {
         preorderConfirmModal.close();
     } else {
@@ -1245,8 +1253,6 @@ const openPreorderConfirmModal = () => {
     if (!preorderConfirmModal) {
         return;
     }
-
-    showPreorderConfirmView();
 
     if (preorderConfirmSummary) {
         preorderConfirmSummary.textContent = getCartSummaryText();
@@ -1315,17 +1321,20 @@ const startStripeCheckout = async () => {
             return checkoutSession.clientSecret;
         };
 
-        showEmbeddedCheckoutView();
-
         activeEmbeddedCheckout = await stripeClient.createEmbeddedCheckoutPage({
             fetchClientSecret,
             onComplete: handleEmbeddedCheckoutComplete
         });
 
-        activeEmbeddedCheckout.mount('#preorder-checkout-mount');
+        closePreorderConfirmModal();
+        openStripeCheckoutModal();
+        activeEmbeddedCheckout.mount('#stripe-checkout-mount');
+
+        if (preorderConfirmContinue) {
+            preorderConfirmContinue.disabled = false;
+        }
     } catch (error) {
         destroyActiveEmbeddedCheckout();
-        showPreorderConfirmView();
         activeCheckoutReservationId = '';
         activeCheckoutSessionId = '';
 
@@ -1380,7 +1389,15 @@ preorderConfirmModal?.addEventListener('click', (event) => {
     }
 });
 
-preorderConfirmModal?.addEventListener('close', () => {
+stripeCheckoutClose?.addEventListener('click', closeStripeCheckoutModal);
+
+stripeCheckoutModal?.addEventListener('click', (event) => {
+    if (event.target === stripeCheckoutModal) {
+        closeStripeCheckoutModal();
+    }
+});
+
+stripeCheckoutModal?.addEventListener('close', () => {
     cancelActiveCheckout();
 });
 
