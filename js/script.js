@@ -75,7 +75,9 @@ const cartItems = [];
 const availabilityUpdaters = [];
 const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
+const checkoutCancelUrl = '/api/cancel-checkout-session';
 const inventoryStatusUrl = '/api/inventory';
+const pendingCheckoutReservationKey = 'crossWearPendingCheckoutReservation';
 let activeImageGallery = null;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
 const signaturePreviewTapMoveThreshold = 8;
@@ -686,6 +688,66 @@ const loadInventoryStatus = async () => {
     }
 };
 
+const setPendingCheckoutReservation = (reservationId) => {
+    if (!reservationId) {
+        return;
+    }
+
+    try {
+        window.sessionStorage.setItem(pendingCheckoutReservationKey, reservationId);
+    } catch (error) {
+        // Storage can be unavailable in private or restricted browser contexts.
+    }
+};
+
+const popPendingCheckoutReservation = () => {
+    try {
+        const reservationId = window.sessionStorage.getItem(pendingCheckoutReservationKey) || '';
+        window.sessionStorage.removeItem(pendingCheckoutReservationKey);
+        return reservationId;
+    } catch (error) {
+        return '';
+    }
+};
+
+const releasePendingCheckoutReservation = async () => {
+    if (window.location.protocol === 'file:') {
+        return;
+    }
+
+    const reservationId = popPendingCheckoutReservation();
+
+    if (!reservationId) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json'
+            },
+            cache: 'no-store',
+            keepalive: true
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to release checkout reservation.');
+        }
+
+        const result = await response.json().catch(() => ({}));
+
+        if (result.released === false) {
+            throw new Error('Checkout reservation was not released.');
+        }
+    } catch (error) {
+        setPendingCheckoutReservation(reservationId);
+        return;
+    }
+
+    await loadInventoryStatus();
+};
+
 const getSizeSelector = (sizeSelect) => {
     let selector = sizeSelect.nextElementSibling?.classList.contains('size-selector') ? sizeSelect.nextElementSibling : null;
 
@@ -1127,6 +1189,7 @@ const startStripeCheckout = async () => {
             throw new Error(checkoutSession.error || 'Secure checkout is almost ready. Please check back shortly.');
         }
 
+        setPendingCheckoutReservation(checkoutSession.reservationId);
         window.location.href = checkoutSession.url;
     } catch (error) {
         if (preorderConfirmContinue) {
@@ -1150,6 +1213,10 @@ preorderConfirmModal?.addEventListener('click', (event) => {
     if (event.target === preorderConfirmModal) {
         closePreorderConfirmModal({ reopenCart: true });
     }
+});
+
+window.addEventListener('pageshow', () => {
+    releasePendingCheckoutReservation();
 });
 
 productCards.forEach((productCard) => {

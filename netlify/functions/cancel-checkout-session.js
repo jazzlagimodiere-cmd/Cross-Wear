@@ -12,16 +12,31 @@ const redirectResponse = (location) => ({
   body: ''
 });
 
+const jsonResponse = (statusCode, body) => ({
+  statusCode,
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store'
+  },
+  body: JSON.stringify(body)
+});
+
 exports.handler = async (event) => {
   const reservationId = String(event.queryStringParameters?.reservation_id || '').trim();
+  let released = false;
 
   if (reservationId) {
     try {
       connectInventoryStore(event);
       await releaseReservation(reservationId, 'checkout_canceled');
+      released = true;
     } catch (error) {
       console.error('Unable to release canceled checkout reservation:', error);
     }
+  }
+
+  if (event.httpMethod === 'POST') {
+    return jsonResponse(200, { released });
   }
 
   return redirectResponse('/');
