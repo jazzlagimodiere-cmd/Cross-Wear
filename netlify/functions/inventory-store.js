@@ -3,11 +3,17 @@ const { connectLambda, getStore } = require('@netlify/blobs');
 
 const inventoryStoreName = 'cross-wear-inventory';
 const inventoryKey = 'inventory-v2';
-const configuredReservationSeconds = Number(process.env.CHECKOUT_RESERVATION_SECONDS || 30 * 60);
+// Stripe requires Checkout Session expires_at to be at least 30 minutes in the
+// future *at the moment Stripe processes the request*. Our reservation "now" is
+// captured slightly earlier (before the inventory write + Stripe API call), so a
+// bare 30-minute TTL can end up just under Stripe's minimum and get rejected.
+// Use 35 minutes to keep a safety margin.
+const minimumReservationSeconds = 35 * 60;
+const configuredReservationSeconds = Number(process.env.CHECKOUT_RESERVATION_SECONDS || minimumReservationSeconds);
 const signatureInitialStock = 10;
 const scriptureInitialStock = 24;
 const maxRestockQuantity = 5000;
-const reservationSeconds = Number.isInteger(configuredReservationSeconds) && configuredReservationSeconds >= 1800 ? configuredReservationSeconds : 30 * 60;
+const reservationSeconds = Number.isInteger(configuredReservationSeconds) && configuredReservationSeconds >= minimumReservationSeconds ? configuredReservationSeconds : minimumReservationSeconds;
 
 class InventoryError extends Error {
   constructor(message, statusCode = 400, details = {}) {

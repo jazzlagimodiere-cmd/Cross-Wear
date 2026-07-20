@@ -122,7 +122,13 @@ exports.handler = async (event) => {
       payment_method_types: ['card'],
       client_reference_id: reservation.reservationId,
       line_items: lineItems,
-      expires_at: Math.floor(reservation.expiresAt / 1000),
+      // Stripe requires expires_at to be at least 30 minutes in the future at the
+      // moment it processes the request. Clamp to a safe floor so any delay between
+      // reserving inventory and calling Stripe can never push it under that minimum.
+      expires_at: Math.max(
+        Math.floor(reservation.expiresAt / 1000),
+        Math.floor(Date.now() / 1000) + (31 * 60)
+      ),
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['CA']
