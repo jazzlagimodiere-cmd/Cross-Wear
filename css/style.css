@@ -1057,7 +1057,7 @@ body.about-background .about-hero {
     display: grid;
     justify-items: center;
     width: 100%;
-    margin: 18px auto 0;
+    margin: clamp(24px, 4vw, 48px) auto 0;
     box-sizing: border-box;
     padding: 0;
     text-align: center;
