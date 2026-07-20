@@ -11,38 +11,8 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 const currency = process.env.STRIPE_CURRENCY || 'cad';
-const defaultSiteUrl = 'http://localhost:8888';
-const configuredSiteUrl = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
 const shippingHandlingAmount = 1500;
 const freeShippingThresholdAmount = 30000;
-
-const isLocalSiteUrl = (url) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url);
-
-const getHeader = (headers, headerName) => {
-  const normalizedHeaderName = headerName.toLowerCase();
-  const headerKey = Object.keys(headers).find((key) => key.toLowerCase() === normalizedHeaderName);
-
-  return headerKey ? headers[headerKey] : '';
-};
-
-const resolveSiteUrl = (event) => {
-  const headers = event.headers || {};
-  const forwardedHost = String(getHeader(headers, 'x-forwarded-host') || '');
-  const host = String(forwardedHost || getHeader(headers, 'host') || '').split(',')[0].trim();
-  const forwardedProto = String(getHeader(headers, 'x-forwarded-proto') || '').split(',')[0].trim();
-  const protocol = forwardedProto || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
-  const requestSiteUrl = host ? `${protocol}://${host}`.replace(/\/+$/, '') : '';
-
-  if (configuredSiteUrl && !isLocalSiteUrl(configuredSiteUrl)) {
-    return configuredSiteUrl;
-  }
-
-  if (requestSiteUrl && !isLocalSiteUrl(requestSiteUrl)) {
-    return requestSiteUrl;
-  }
-
-  return configuredSiteUrl || requestSiteUrl || defaultSiteUrl;
-};
 
 const jsonResponse = (statusCode, body) => ({
   statusCode,
@@ -137,7 +107,6 @@ exports.handler = async (event) => {
     return jsonResponse(500, { error: 'Unable to reserve preorder inventory.' });
   }
 
-  const checkoutSiteUrl = resolveSiteUrl(event);
   const lineItems = orderItems.map(buildLineItem);
   const shippingHandlingLineItem = getShippingHandlingAmount(orderItems);
 
@@ -147,6 +116,8 @@ exports.handler = async (event) => {
 
   try {
     const session = await stripe.checkout.sessions.create({
+      ui_mode: 'embedded_page',
+      redirect_on_completion: 'never',
       mode: 'payment',
       payment_method_types: ['card'],
       client_reference_id: reservation.reservationId,
@@ -162,13 +133,11 @@ exports.handler = async (event) => {
       metadata: {
         order_type: 'preorder',
         reservation_id: reservation.reservationId
-      },
-      success_url: `${checkoutSiteUrl}/api/confirm-checkout-session?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${checkoutSiteUrl}/api/cancel-checkout-session?reservation_id=${encodeURIComponent(reservation.reservationId)}`
+      }
     });
 
     return jsonResponse(200, {
-      url: session.url,
+      clientSecret: session.client_secret,
       reservationId: reservation.reservationId
     });
   } catch (error) {

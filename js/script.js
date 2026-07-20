@@ -51,7 +51,10 @@ const preorderConfirmModal = document.querySelector('#preorder-confirm-modal');
 const preorderConfirmClose = document.querySelector('.preorder-confirm-close');
 const preorderConfirmBack = document.querySelector('.preorder-confirm-back');
 const preorderConfirmContinue = document.querySelector('.preorder-confirm-continue');
+const preorderConfirmCopy = document.querySelector('.preorder-confirm-copy');
 const preorderConfirmSummary = document.querySelector('.preorder-confirm-summary');
+const preorderConfirmActions = document.querySelector('.preorder-confirm-actions');
+const preorderCheckoutMount = document.querySelector('#preorder-checkout-mount');
 const imageViewerModal = document.querySelector('#image-viewer-modal');
 const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
@@ -76,13 +79,15 @@ const availabilityUpdaters = [];
 const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
 const checkoutCancelUrl = '/api/cancel-checkout-session';
+const checkoutConfirmUrl = '/api/confirm-checkout-session';
+const stripeConfigUrl = '/api/stripe-config';
 const inventoryStatusUrl = '/api/inventory';
 const cartStorageKey = 'crossWearCartItems';
-const pendingCheckoutReservationKey = 'crossWearPendingCheckoutReservation';
-const pendingCheckoutReleaseRetryMs = 1500;
-const pendingCheckoutMissingRetryWindowMs = 2 * 60 * 1000;
 let activeImageGallery = null;
-let pendingCheckoutReleaseTimer = 0;
+let stripeClientPromise = null;
+let activeEmbeddedCheckout = null;
+let activeCheckoutReservationId = '';
+let activeCheckoutSessionId = '';
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
 const signaturePreviewTapMoveThreshold = 8;
 let activeSignaturePreviewInteraction = null;
@@ -753,99 +758,82 @@ const loadInventoryStatus = async () => {
     }
 };
 
-const setPendingCheckoutReservation = (reservationId) => {
-    if (!reservationId) {
-        return;
+const getStripeClient = async () => {
+    if (stripeClientPromise) {
+        return stripeClientPromise;
     }
 
-    const pendingReservation = JSON.stringify({
-        reservationId,
-        createdAt: Date.now()
-    });
-
-    try {
-        window.localStorage.setItem(pendingCheckoutReservationKey, pendingReservation);
-    } catch (error) {
-        // Storage can be unavailable in private or restricted browser contexts.
-    }
-
-    try {
-        window.sessionStorage.setItem(pendingCheckoutReservationKey, pendingReservation);
-    } catch (error) {
-        // Keep the localStorage copy as the primary path.
-    }
-};
-
-const parsePendingCheckoutReservation = (value) => {
-    if (!value) {
-        return null;
-    }
-
-    try {
-        const pendingReservation = JSON.parse(value);
-
-        if (pendingReservation?.reservationId) {
-            return {
-                reservationId: pendingReservation.reservationId,
-                createdAt: Number(pendingReservation.createdAt) || Date.now()
-            };
+    stripeClientPromise = (async () => {
+        if (typeof window.Stripe !== 'function') {
+            throw new Error('Secure checkout is almost ready. Please check back shortly.');
         }
-    } catch (error) {
-        return {
-            reservationId: value,
-            createdAt: Date.now()
-        };
-    }
 
-    return null;
-};
+        const response = await fetch(stripeConfigUrl, {
+            headers: {
+                Accept: 'application/json'
+            },
+            cache: 'no-store'
+        });
 
-const getPendingCheckoutReservation = () => {
-    try {
-        return parsePendingCheckoutReservation(window.localStorage.getItem(pendingCheckoutReservationKey));
-    } catch (error) {
-        try {
-            return parsePendingCheckoutReservation(window.sessionStorage.getItem(pendingCheckoutReservationKey));
-        } catch (innerError) {
-            return null;
+        const config = await response.json().catch(() => ({}));
+
+        if (!response.ok || !config.publishableKey) {
+            throw new Error('Secure checkout is almost ready. Please check back shortly.');
         }
-    }
-};
 
-const clearPendingCheckoutReservation = () => {
-    try {
-        window.localStorage.removeItem(pendingCheckoutReservationKey);
-    } catch (error) {
-        // Storage can be unavailable in private or restricted browser contexts.
-    }
+        return window.Stripe(config.publishableKey);
+    })();
 
     try {
-        window.sessionStorage.removeItem(pendingCheckoutReservationKey);
+        return await stripeClientPromise;
     } catch (error) {
-        // Session storage may also be unavailable.
+        stripeClientPromise = null;
+        throw error;
     }
 };
 
-const schedulePendingCheckoutRelease = () => {
-    window.clearTimeout(pendingCheckoutReleaseTimer);
-    pendingCheckoutReleaseTimer = window.setTimeout(releasePendingCheckoutReservation, pendingCheckoutReleaseRetryMs);
+const showEmbeddedCheckoutView = () => {
+    preorderConfirmCopy?.setAttribute('hidden', '');
+    preorderConfirmSummary?.setAttribute('hidden', '');
+    preorderConfirmActions?.setAttribute('hidden', '');
+    preorderCheckoutMount?.removeAttribute('hidden');
 };
 
-const releasePendingCheckoutReservation = async () => {
-    if (window.location.protocol === 'file:') {
+const showPreorderConfirmView = () => {
+    preorderConfirmCopy?.removeAttribute('hidden');
+    preorderConfirmSummary?.removeAttribute('hidden');
+    preorderConfirmActions?.removeAttribute('hidden');
+    preorderCheckoutMount?.setAttribute('hidden', '');
+
+    if (preorderCheckoutMount) {
+        preorderCheckoutMount.innerHTML = '';
+    }
+};
+
+const destroyActiveEmbeddedCheckout = () => {
+    if (!activeEmbeddedCheckout) {
         return;
     }
 
-    const pendingReservation = getPendingCheckoutReservation();
+    try {
+        activeEmbeddedCheckout.destroy();
+    } catch (error) {
+        // The instance may already be destroyed.
+    }
 
-    if (!pendingReservation?.reservationId) {
+    activeEmbeddedCheckout = null;
+};
+
+const releaseActiveCheckoutReservation = async () => {
+    const reservationId = activeCheckoutReservationId;
+    activeCheckoutReservationId = '';
+
+    if (!reservationId || window.location.protocol === 'file:') {
         return;
     }
 
-    const { reservationId, createdAt } = pendingReservation;
-
     try {
-        const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
+        await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
             method: 'POST',
             headers: {
                 Accept: 'application/json'
@@ -853,28 +841,22 @@ const releasePendingCheckoutReservation = async () => {
             cache: 'no-store',
             keepalive: true
         });
-
-        if (!response.ok) {
-            throw new Error('Unable to release checkout reservation.');
-        }
-
-        const result = await response.json().catch(() => ({}));
-
-        if (result.released === true || result.status === 'completed' || result.status === 'released' || result.status === 'expired') {
-            clearPendingCheckoutReservation();
-        } else if (result.status === 'missing' && Date.now() - createdAt < pendingCheckoutMissingRetryWindowMs) {
-            schedulePendingCheckoutRelease();
-            return;
-        } else {
-            clearPendingCheckoutReservation();
-            throw new Error('Checkout reservation was not released.');
-        }
     } catch (error) {
-        schedulePendingCheckoutRelease();
-        return;
+        // Best effort release; the reservation will still expire on its own.
     }
 
     await loadInventoryStatus();
+};
+
+const cancelActiveCheckout = () => {
+    if (!activeEmbeddedCheckout && !activeCheckoutReservationId) {
+        return;
+    }
+
+    destroyActiveEmbeddedCheckout();
+    showPreorderConfirmView();
+    activeCheckoutSessionId = '';
+    releaseActiveCheckoutReservation();
 };
 
 const getSizeSelector = (sizeSelect) => {
@@ -1201,6 +1183,8 @@ if (cartClear) {
 }
 
 const closePreorderConfirmModal = ({ reopenCart = false } = {}) => {
+    cancelActiveCheckout();
+
     if (preorderConfirmModal?.open && typeof preorderConfirmModal.close === 'function') {
         preorderConfirmModal.close();
     } else {
@@ -1262,6 +1246,8 @@ const openPreorderConfirmModal = () => {
         return;
     }
 
+    showPreorderConfirmView();
+
     if (preorderConfirmSummary) {
         preorderConfirmSummary.textContent = getCartSummaryText();
     }
@@ -1304,25 +1290,45 @@ const startStripeCheckout = async () => {
     }
 
     try {
-        const response = await fetch(checkoutSessionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                items: cartItems.map(({ name, size, quantity }) => ({ name, size, quantity }))
-            })
+        const stripeClient = await getStripeClient();
+
+        const fetchClientSecret = async () => {
+            const response = await fetch(checkoutSessionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    items: cartItems.map(({ name, size, quantity }) => ({ name, size, quantity }))
+                })
+            });
+
+            const checkoutSession = await response.json().catch(() => ({}));
+
+            if (!response.ok || !checkoutSession.clientSecret) {
+                throw new Error(checkoutSession.error || 'Secure checkout is almost ready. Please check back shortly.');
+            }
+
+            activeCheckoutReservationId = checkoutSession.reservationId || '';
+            activeCheckoutSessionId = checkoutSession.clientSecret.split('_secret_')[0] || '';
+
+            return checkoutSession.clientSecret;
+        };
+
+        showEmbeddedCheckoutView();
+
+        activeEmbeddedCheckout = await stripeClient.createEmbeddedCheckoutPage({
+            fetchClientSecret,
+            onComplete: handleEmbeddedCheckoutComplete
         });
 
-        const checkoutSession = await response.json();
-
-        if (!response.ok || !checkoutSession.url) {
-            throw new Error(checkoutSession.error || 'Secure checkout is almost ready. Please check back shortly.');
-        }
-
-        setPendingCheckoutReservation(checkoutSession.reservationId);
-        window.location.href = checkoutSession.url;
+        activeEmbeddedCheckout.mount('#preorder-checkout-mount');
     } catch (error) {
+        destroyActiveEmbeddedCheckout();
+        showPreorderConfirmView();
+        activeCheckoutReservationId = '';
+        activeCheckoutSessionId = '';
+
         if (preorderConfirmContinue) {
             preorderConfirmContinue.disabled = false;
         }
@@ -1333,6 +1339,34 @@ const startStripeCheckout = async () => {
 
         await loadInventoryStatus();
     }
+};
+
+const handleEmbeddedCheckoutComplete = async () => {
+    const sessionId = activeCheckoutSessionId;
+    activeCheckoutSessionId = '';
+    activeCheckoutReservationId = '';
+
+    destroyActiveEmbeddedCheckout();
+
+    if (sessionId && window.location.protocol !== 'file:') {
+        try {
+            await fetch(checkoutConfirmUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sessionId }),
+                cache: 'no-store'
+            });
+        } catch (error) {
+            // The Stripe webhook will still confirm the order if this call fails.
+        }
+    }
+
+    cartItems.length = 0;
+    saveCartItems();
+
+    window.location.href = '/thank-you?order=confirmed';
 };
 
 cartCheckout?.addEventListener('click', openPreorderConfirmModal);
@@ -1346,8 +1380,8 @@ preorderConfirmModal?.addEventListener('click', (event) => {
     }
 });
 
-window.addEventListener('pageshow', () => {
-    releasePendingCheckoutReservation();
+preorderConfirmModal?.addEventListener('close', () => {
+    cancelActiveCheckout();
 });
 
 productCards.forEach((productCard) => {

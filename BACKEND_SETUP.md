@@ -18,6 +18,7 @@ npm install
 
 ```env
 STRIPE_SECRET_KEY=sk_test_your_real_test_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_real_test_publishable_key
 STRIPE_WEBHOOK_SECRET=whsec_your_test_webhook_secret
 SITE_URL=http://localhost:8888
 STRIPE_CURRENCY=cad
@@ -39,6 +40,7 @@ In Netlify, add these environment variables for the deployed site:
 
 ```env
 STRIPE_SECRET_KEY=sk_live_or_test_key_from_stripe
+STRIPE_PUBLISHABLE_KEY=pk_live_or_test_key_from_stripe
 STRIPE_WEBHOOK_SECRET=whsec_live_or_test_webhook_secret_from_stripe
 SITE_URL=https://jesuscrosswear.ca
 STRIPE_CURRENCY=cad

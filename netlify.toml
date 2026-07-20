@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/stripe-config"
+  to = "/.netlify/functions/stripe-config"
+  status = 200
+
+[[redirects]]
   from = "/api/inventory"
   to = "/.netlify/functions/inventory-status"
   status = 200

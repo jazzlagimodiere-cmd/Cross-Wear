@@ -2182,6 +2182,15 @@ body.about-background .about-hero {
     margin-top: 18px;
 }
 
+.preorder-checkout-mount {
+    margin-top: 18px;
+    min-height: 420px;
+}
+
+.preorder-confirm-modal:has(.preorder-checkout-mount:not([hidden])) {
+    width: min(560px, calc(100vw - 28px));
+}
+
 .preorder-confirm-back,
 .preorder-confirm-continue {
     width: 100%;

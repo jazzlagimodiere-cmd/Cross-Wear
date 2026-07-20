@@ -99,15 +99,7 @@
         (() => {
             const sessionId = new URLSearchParams(window.location.search).get('session_id');
             const orderStatus = new URLSearchParams(window.location.search).get('order');
-            const pendingReservationKey = 'crossWearPendingCheckoutReservation';
             const cartStorageKey = 'crossWearCartItems';
-
-            const clearPendingReservation = () => {
-                try {
-                    window.localStorage.removeItem(pendingReservationKey);
-                    window.sessionStorage.removeItem(pendingReservationKey);
-                } catch (error) {}
-            };
 
             const clearStoredCart = () => {
                 try {
@@ -116,7 +108,6 @@
             };
 
             if (orderStatus === 'confirmed') {
-                clearPendingReservation();
                 clearStoredCart();
                 return;
             }
@@ -134,7 +125,6 @@
                 cache: 'no-store'
             }).then((response) => {
                 if (response.ok) {
-                    clearPendingReservation();
                     clearStoredCart();
                 }
             }).catch(() => {});
