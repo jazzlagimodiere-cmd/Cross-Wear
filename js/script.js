@@ -78,7 +78,10 @@ const checkoutSessionUrl = '/api/create-checkout-session';
 const checkoutCancelUrl = '/api/cancel-checkout-session';
 const inventoryStatusUrl = '/api/inventory';
 const pendingCheckoutReservationKey = 'crossWearPendingCheckoutReservation';
+const pendingCheckoutReleaseRetryMs = 1500;
+const pendingCheckoutMissingRetryWindowMs = 2 * 60 * 1000;
 let activeImageGallery = null;
+let pendingCheckoutReleaseTimer = 0;
 const canHoverPreview = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
 const signaturePreviewTapMoveThreshold = 8;
 let activeSignaturePreviewInteraction = null;
@@ -693,21 +696,77 @@ const setPendingCheckoutReservation = (reservationId) => {
         return;
     }
 
+    const pendingReservation = JSON.stringify({
+        reservationId,
+        createdAt: Date.now()
+    });
+
     try {
-        window.sessionStorage.setItem(pendingCheckoutReservationKey, reservationId);
+        window.localStorage.setItem(pendingCheckoutReservationKey, pendingReservation);
     } catch (error) {
         // Storage can be unavailable in private or restricted browser contexts.
     }
+
+    try {
+        window.sessionStorage.setItem(pendingCheckoutReservationKey, pendingReservation);
+    } catch (error) {
+        // Keep the localStorage copy as the primary path.
+    }
 };
 
-const popPendingCheckoutReservation = () => {
-    try {
-        const reservationId = window.sessionStorage.getItem(pendingCheckoutReservationKey) || '';
-        window.sessionStorage.removeItem(pendingCheckoutReservationKey);
-        return reservationId;
-    } catch (error) {
-        return '';
+const parsePendingCheckoutReservation = (value) => {
+    if (!value) {
+        return null;
     }
+
+    try {
+        const pendingReservation = JSON.parse(value);
+
+        if (pendingReservation?.reservationId) {
+            return {
+                reservationId: pendingReservation.reservationId,
+                createdAt: Number(pendingReservation.createdAt) || Date.now()
+            };
+        }
+    } catch (error) {
+        return {
+            reservationId: value,
+            createdAt: Date.now()
+        };
+    }
+
+    return null;
+};
+
+const getPendingCheckoutReservation = () => {
+    try {
+        return parsePendingCheckoutReservation(window.localStorage.getItem(pendingCheckoutReservationKey));
+    } catch (error) {
+        try {
+            return parsePendingCheckoutReservation(window.sessionStorage.getItem(pendingCheckoutReservationKey));
+        } catch (innerError) {
+            return null;
+        }
+    }
+};
+
+const clearPendingCheckoutReservation = () => {
+    try {
+        window.localStorage.removeItem(pendingCheckoutReservationKey);
+    } catch (error) {
+        // Storage can be unavailable in private or restricted browser contexts.
+    }
+
+    try {
+        window.sessionStorage.removeItem(pendingCheckoutReservationKey);
+    } catch (error) {
+        // Session storage may also be unavailable.
+    }
+};
+
+const schedulePendingCheckoutRelease = () => {
+    window.clearTimeout(pendingCheckoutReleaseTimer);
+    pendingCheckoutReleaseTimer = window.setTimeout(releasePendingCheckoutReservation, pendingCheckoutReleaseRetryMs);
 };
 
 const releasePendingCheckoutReservation = async () => {
@@ -715,11 +774,13 @@ const releasePendingCheckoutReservation = async () => {
         return;
     }
 
-    const reservationId = popPendingCheckoutReservation();
+    const pendingReservation = getPendingCheckoutReservation();
 
-    if (!reservationId) {
+    if (!pendingReservation?.reservationId) {
         return;
     }
+
+    const { reservationId, createdAt } = pendingReservation;
 
     try {
         const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
@@ -737,11 +798,17 @@ const releasePendingCheckoutReservation = async () => {
 
         const result = await response.json().catch(() => ({}));
 
-        if (result.released === false) {
+        if (result.released === true || result.status === 'completed' || result.status === 'released' || result.status === 'expired') {
+            clearPendingCheckoutReservation();
+        } else if (result.status === 'missing' && Date.now() - createdAt < pendingCheckoutMissingRetryWindowMs) {
+            schedulePendingCheckoutRelease();
+            return;
+        } else {
+            clearPendingCheckoutReservation();
             throw new Error('Checkout reservation was not released.');
         }
     } catch (error) {
-        setPendingCheckoutReservation(reservationId);
+        schedulePendingCheckoutRelease();
         return;
     }
 

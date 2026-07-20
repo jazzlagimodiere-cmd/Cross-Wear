@@ -544,19 +544,23 @@ const releaseReservation = async (reservationId, reason = 'released') => {
   return mutateInventory((inventory, now) => {
     const reservation = inventory.reservations[reservationId];
 
-    if (!reservation || reservation.status === 'completed') {
-      return skipInventoryWrite({ released: false });
+    if (!reservation) {
+      return skipInventoryWrite({ released: false, status: 'missing' });
+    }
+
+    if (reservation.status === 'completed') {
+      return skipInventoryWrite({ released: false, status: 'completed' });
     }
 
     if (reservation.status === 'released' || reservation.status === 'expired') {
-      return skipInventoryWrite({ released: true, alreadyReleased: true });
+      return skipInventoryWrite({ released: true, alreadyReleased: true, status: reservation.status });
     }
 
     reservation.status = reason === 'expired' ? 'expired' : 'released';
     reservation.releasedAt = new Date(now).toISOString();
     reservation.releaseReason = reason;
 
-    return { released: true };
+    return { released: true, status: reservation.status };
   });
 };
 

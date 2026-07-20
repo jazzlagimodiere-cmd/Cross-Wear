@@ -23,20 +23,19 @@ const jsonResponse = (statusCode, body) => ({
 
 exports.handler = async (event) => {
   const reservationId = String(event.queryStringParameters?.reservation_id || '').trim();
-  let released = false;
+  let releaseResult = { released: false, status: 'missing' };
 
   if (reservationId) {
     try {
       connectInventoryStore(event);
-      const result = await releaseReservation(reservationId, 'checkout_canceled');
-      released = Boolean(result?.released);
+      releaseResult = await releaseReservation(reservationId, 'checkout_canceled');
     } catch (error) {
       console.error('Unable to release canceled checkout reservation:', error);
     }
   }
 
   if (event.httpMethod === 'POST') {
-    return jsonResponse(200, { released });
+    return jsonResponse(200, releaseResult);
   }
 
   return redirectResponse('/');

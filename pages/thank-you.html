@@ -98,6 +98,20 @@
     <script>
         (() => {
             const sessionId = new URLSearchParams(window.location.search).get('session_id');
+            const orderStatus = new URLSearchParams(window.location.search).get('order');
+            const pendingReservationKey = 'crossWearPendingCheckoutReservation';
+
+            const clearPendingReservation = () => {
+                try {
+                    window.localStorage.removeItem(pendingReservationKey);
+                    window.sessionStorage.removeItem(pendingReservationKey);
+                } catch (error) {}
+            };
+
+            if (orderStatus === 'confirmed') {
+                clearPendingReservation();
+                return;
+            }
 
             if (!sessionId || window.location.protocol === 'file:') {
                 return;
@@ -110,6 +124,10 @@
                 },
                 body: JSON.stringify({ sessionId }),
                 cache: 'no-store'
+            }).then((response) => {
+                if (response.ok) {
+                    clearPendingReservation();
+                }
             }).catch(() => {});
         })();
     </script>
