@@ -21,7 +21,7 @@ const getKlaviyoSignupModal = () => {
 				<h2 id="klaviyo-signup-title">Join the Mailing List</h2>
 				<button class="klaviyo-signup-close small-action-button" type="button">Close</button>
 			</div>
-			<p class="klaviyo-signup-copy">Get preorder updates, restock notes, and new collection releases.</p>
+			<p class="klaviyo-signup-copy">Get pre-order updates, restock notes, and new collection releases.</p>
 			<form class="klaviyo-signup-form" novalidate>
 				<p class="klaviyo-signup-message" id="klaviyo-signup-message" aria-live="polite"></p>
 				<label class="klaviyo-signup-label">

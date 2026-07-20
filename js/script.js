@@ -1015,7 +1015,7 @@ const getCartSummaryText = () => {
     }
 
     const itemSummary = cartItems.map((item) => `${item.name} size ${item.size} x ${item.quantity}`).join('; ');
-    return `${itemCount} item${itemCount === 1 ? '' : 's'} in your preorder: ${itemSummary}.`;
+    return `${itemCount} item${itemCount === 1 ? '' : 's'} in your pre-order: ${itemSummary}.`;
 };
 
 const updateCartButton = () => {
@@ -1576,7 +1576,7 @@ productCards.forEach((productCard) => {
 
         if (quantity === 0) {
             orderMessage.textContent = '';
-            showOrderValidationBubble(orderPanel, 'Select a quantity to preorder.');
+            showOrderValidationBubble(orderPanel, 'Select a quantity to pre-order.');
             updateAvailability({ preserveQuantity: false });
             return;
         }
@@ -1606,7 +1606,7 @@ productCards.forEach((productCard) => {
         updateAvailability({ preserveQuantity: false });
         clearOrderValidationBubble(orderPanel);
 
-        orderMessage.textContent = `${quantity} item${quantity === 1 ? '' : 's'} added to your preorder.`;
+        orderMessage.textContent = `${quantity} item${quantity === 1 ? '' : 's'} added to your pre-order.`;
         closeOrderModal();
         window.setTimeout(() => openCartModal(getCartSummaryText()), 0);
     });
