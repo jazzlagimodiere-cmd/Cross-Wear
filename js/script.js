@@ -835,6 +835,35 @@ const destroyActiveEmbeddedCheckout = () => {
     }
 };
 
+const releaseReservationById = async (reservationId) => {
+    if (!reservationId || window.location.protocol === 'file:') {
+        return;
+    }
+
+    // Retry once so a transient network hiccup doesn't leave a reservation
+    // locked against inventory for the full TTL while the customer has
+    // already moved on to a new checkout attempt.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+            const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json'
+                },
+                cache: 'no-store',
+                keepalive: true
+            });
+
+            if (response.ok) {
+                return;
+            }
+        } catch (error) {
+            // Fall through to retry (or give up after the final attempt); the
+            // reservation will still expire on its own as a last resort.
+        }
+    }
+};
+
 const releaseActiveCheckoutReservation = async () => {
     const reservationId = activeCheckoutReservationId;
     activeCheckoutReservationId = '';
@@ -843,30 +872,18 @@ const releaseActiveCheckoutReservation = async () => {
         return;
     }
 
-    try {
-        await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json'
-            },
-            cache: 'no-store',
-            keepalive: true
-        });
-    } catch (error) {
-        // Best effort release; the reservation will still expire on its own.
-    }
-
+    await releaseReservationById(reservationId);
     await loadInventoryStatus();
 };
 
-const cancelActiveCheckout = () => {
+const cancelActiveCheckout = async () => {
     if (!activeEmbeddedCheckout && !activeCheckoutReservationId) {
         return;
     }
 
     destroyActiveEmbeddedCheckout();
     activeCheckoutSessionId = '';
-    releaseActiveCheckoutReservation();
+    await releaseActiveCheckoutReservation();
 };
 
 const getSizeSelector = (sizeSelect) => {
@@ -1293,6 +1310,15 @@ const startStripeCheckout = async () => {
         }
 
         return;
+    }
+
+    // If the customer already had a checkout window open (e.g. they backed out
+    // to add or remove an item and are starting again), fully release that
+    // reservation before reserving inventory for the updated cart. Otherwise
+    // the old and new reservations could briefly (or, if the release request
+    // ever fails, permanently until TTL) both hold stock at once.
+    if (activeEmbeddedCheckout || activeCheckoutReservationId) {
+        await cancelActiveCheckout();
     }
 
     try {
