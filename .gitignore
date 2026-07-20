@@ -8,6 +8,7 @@ desktop.ini
 .vscode/
 *.code-search
 *.swp
+Inventory Reset/
 
 # Logs and temp
 *.log
