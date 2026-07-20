@@ -851,11 +851,16 @@ const releaseReservationById = async (reservationId) => {
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         try {
+            // Send the reservation id in the request body (not just the query
+            // string) since the /api/cancel-checkout-session rewrite does not
+            // reliably forward query strings through to the function.
             const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
                 method: 'POST',
                 headers: {
-                    Accept: 'application/json'
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
                 },
+                body: JSON.stringify({ reservation_id: reservationId }),
                 cache: 'no-store',
                 keepalive: true
             });
@@ -1450,7 +1455,11 @@ window.addEventListener('pagehide', () => {
     const reservationId = activeCheckoutReservationId;
 
     try {
-        navigator.sendBeacon(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`);
+        // Send the reservation id as a JSON body (not just the query string)
+        // since the /api/cancel-checkout-session rewrite does not reliably
+        // forward query strings through to the function.
+        const beaconBody = new Blob([JSON.stringify({ reservation_id: reservationId })], { type: 'application/json' });
+        navigator.sendBeacon(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, beaconBody);
     } catch (error) {
         // Best effort; the reservation will still expire on its own.
     }

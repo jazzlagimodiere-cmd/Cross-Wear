@@ -21,8 +21,29 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body)
 });
 
+// The /api/cancel-checkout-session rewrite in netlify.toml does not reliably
+// forward the query string through to this function, so query-string-only
+// reservation ids can silently come through empty and every release request
+// would then report the (identically-shaped) "missing" result even though the
+// reservation genuinely exists. Reading the id from the JSON request body
+// avoids depending on that redirect behavior; the query string is kept only
+// as a fallback for the plain-link (GET) cancellation path.
+const getReservationIdFromBody = (event) => {
+  if (!event.body) {
+    return '';
+  }
+
+  try {
+    const bodyString = event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body;
+    const payload = JSON.parse(bodyString);
+    return String(payload?.reservation_id || payload?.reservationId || '').trim();
+  } catch (error) {
+    return '';
+  }
+};
+
 exports.handler = async (event) => {
-  const reservationId = String(event.queryStringParameters?.reservation_id || '').trim();
+  const reservationId = getReservationIdFromBody(event) || String(event.queryStringParameters?.reservation_id || '').trim();
   let releaseResult = { released: false, status: 'missing' };
   let releaseError = null;
 
