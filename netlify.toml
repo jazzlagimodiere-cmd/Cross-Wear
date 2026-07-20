@@ -23,6 +23,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/cancel-checkout-session"
+  to = "/.netlify/functions/cancel-checkout-session"
+  status = 200
+
+[[redirects]]
   from = "/api/stripe-webhook"
   to = "/.netlify/functions/stripe-webhook"
   status = 200

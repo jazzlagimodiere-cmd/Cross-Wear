@@ -164,7 +164,7 @@ exports.handler = async (event) => {
         reservation_id: reservation.reservationId
       },
       success_url: `${checkoutSiteUrl}/api/confirm-checkout-session?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${checkoutSiteUrl}/`
+      cancel_url: `${checkoutSiteUrl}/api/cancel-checkout-session?reservation_id=${encodeURIComponent(reservation.reservationId)}`
     });
 
     return jsonResponse(200, { url: session.url });

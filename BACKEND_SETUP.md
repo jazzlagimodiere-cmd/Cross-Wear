@@ -56,6 +56,7 @@ Do not commit `.env` or paste secret keys into chat.
 - If Stripe reports the checkout as completed, the reservation becomes sold inventory.
 - Stripe returns successful checkouts to a backend confirmation endpoint first. The backend verifies the Stripe `session_id`, marks the reservation sold after a paid session, then redirects to the thank-you page.
 - The thank-you page also verifies a returned Stripe `session_id` if one is present. This is a backup path if Stripe webhook delivery is delayed.
+- If a customer cancels from Stripe Checkout, Stripe returns to a backend cancellation endpoint that releases the reservation immediately, then redirects home.
 - If Stripe reports the checkout as expired or failed, the reservation is released.
 - If the visible frontend stock is changed by a visitor, Stripe Checkout still uses backend prices and backend stock checks.
 
