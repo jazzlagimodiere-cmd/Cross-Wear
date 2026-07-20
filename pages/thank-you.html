@@ -100,6 +100,7 @@
             const sessionId = new URLSearchParams(window.location.search).get('session_id');
             const orderStatus = new URLSearchParams(window.location.search).get('order');
             const pendingReservationKey = 'crossWearPendingCheckoutReservation';
+            const cartStorageKey = 'crossWearCartItems';
 
             const clearPendingReservation = () => {
                 try {
@@ -108,8 +109,15 @@
                 } catch (error) {}
             };
 
+            const clearStoredCart = () => {
+                try {
+                    window.localStorage.removeItem(cartStorageKey);
+                } catch (error) {}
+            };
+
             if (orderStatus === 'confirmed') {
                 clearPendingReservation();
+                clearStoredCart();
                 return;
             }
 
@@ -127,6 +135,7 @@
             }).then((response) => {
                 if (response.ok) {
                     clearPendingReservation();
+                    clearStoredCart();
                 }
             }).catch(() => {});
         })();

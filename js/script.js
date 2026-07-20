@@ -77,6 +77,7 @@ const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
 const checkoutCancelUrl = '/api/cancel-checkout-session';
 const inventoryStatusUrl = '/api/inventory';
+const cartStorageKey = 'crossWearCartItems';
 const pendingCheckoutReservationKey = 'crossWearPendingCheckoutReservation';
 const pendingCheckoutReleaseRetryMs = 1500;
 const pendingCheckoutMissingRetryWindowMs = 2 * 60 * 1000;
@@ -435,6 +436,8 @@ const getProductName = (productCard) => productCard.dataset.productName || produ
 
 const getProductPrice = (productCard) => Number(productCard.dataset.unitPrice) || unitPrice;
 
+const getProductCardByName = (name) => [...productCards].find((productCard) => getProductName(productCard) === name);
+
 const getProductImage = (productCard) => {
     const image = productCard.querySelector('.signature-product-media img, [data-slide-image], .product-media img');
 
@@ -449,6 +452,65 @@ const getProductImage = (productCard) => {
         imageSrc: image.currentSrc || image.getAttribute('src') || '',
         imageAlt: image.alt || `${getProductName(productCard)} apparel image`
     };
+};
+
+const normalizeStoredCartItem = (item) => {
+    const name = String(item?.name || '').trim();
+    const size = String(item?.size || '').trim().toUpperCase();
+    const rawQuantity = Math.floor(Number(item?.quantity) || 0);
+    const productCard = getProductCardByName(name);
+
+    if (!name || !productCard || !['L', 'XL'].includes(size) || rawQuantity < 1) {
+        return null;
+    }
+
+    const productImage = getProductImage(productCard);
+    const quantity = clampNumber(rawQuantity, 1, getVariantStockLimit({ name, size }));
+
+    return {
+        name,
+        price: getProductPrice(productCard),
+        size,
+        imageSrc: productImage.imageSrc || String(item?.imageSrc || ''),
+        imageAlt: productImage.imageAlt || String(item?.imageAlt || ''),
+        variantKey: getVariantKey({ name, size }),
+        quantity
+    };
+};
+
+const saveCartItems = () => {
+    try {
+        if (!cartItems.length) {
+            window.localStorage.removeItem(cartStorageKey);
+            return;
+        }
+
+        window.localStorage.setItem(cartStorageKey, JSON.stringify(cartItems));
+    } catch (error) {
+        // Cart persistence is a convenience; checkout still uses server validation.
+    }
+};
+
+const loadStoredCartItems = () => {
+    try {
+        const storedItems = JSON.parse(window.localStorage.getItem(cartStorageKey) || '[]');
+
+        if (!Array.isArray(storedItems)) {
+            window.localStorage.removeItem(cartStorageKey);
+            return;
+        }
+
+        const normalizedItems = storedItems.map(normalizeStoredCartItem).filter(Boolean);
+        cartItems.splice(0, cartItems.length, ...normalizedItems);
+
+        if (normalizedItems.length) {
+            saveCartItems();
+        } else {
+            window.localStorage.removeItem(cartStorageKey);
+        }
+    } catch (error) {
+        cartItems.length = 0;
+    }
 };
 
 const normalizeSlideIndex = (index, slideCount) => (index + slideCount) % slideCount;
@@ -1113,6 +1175,7 @@ if (cartItemsContainer) {
             cartItems.splice(Number(removeButton.dataset.index), 1);
         }
 
+        saveCartItems();
         updateCartButton();
         renderCart();
         updateAllOrderAvailability();
@@ -1126,6 +1189,7 @@ if (cartItemsContainer) {
 if (cartClear) {
     cartClear.addEventListener('click', () => {
         cartItems.length = 0;
+        saveCartItems();
         updateCartButton();
         renderCart();
         updateAllOrderAvailability();
@@ -1466,6 +1530,7 @@ productCards.forEach((productCard) => {
             });
         }
 
+        saveCartItems();
         updateCartButton();
         renderCart();
         updateAvailability({ preserveQuantity: false });
@@ -1477,4 +1542,7 @@ productCards.forEach((productCard) => {
     });
 });
 
+loadStoredCartItems();
+renderCart();
+updateAllOrderAvailability();
 loadInventoryStatus();
