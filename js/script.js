@@ -41,6 +41,8 @@ const cartModal = document.querySelector('#cart-modal');
 const cartTitle = document.querySelector('#cart-modal-title');
 const cartClose = document.querySelector('.cart-close');
 const cartItemsContainer = document.querySelector('.cart-items');
+const cartSubtotal = document.querySelector('.cart-subtotal');
+const cartShipping = document.querySelector('.cart-shipping');
 const cartTotal = document.querySelector('.cart-total');
 const cartCheckout = document.querySelector('.cart-checkout');
 const cartClear = document.querySelector('.cart-clear');
@@ -55,6 +57,8 @@ const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
 const imageViewerClose = document.querySelector('.image-viewer-close');
 const unitPrice = 65.00;
+const shippingHandlingFee = 15.00;
+const freeShippingThreshold = 300.00;
 const defaultSignatureVariantStock = 10;
 const defaultScriptureVariantStock = 24;
 const defaultVariantStockByProduct = {
@@ -426,6 +430,22 @@ const getProductName = (productCard) => productCard.dataset.productName || produ
 
 const getProductPrice = (productCard) => Number(productCard.dataset.unitPrice) || unitPrice;
 
+const getProductImage = (productCard) => {
+    const image = productCard.querySelector('.signature-product-media img, [data-slide-image], .product-media img');
+
+    if (!image) {
+        return {
+            imageSrc: '',
+            imageAlt: ''
+        };
+    }
+
+    return {
+        imageSrc: image.currentSrc || image.getAttribute('src') || '',
+        imageAlt: image.alt || `${getProductName(productCard)} apparel image`
+    };
+};
+
 const normalizeSlideIndex = (index, slideCount) => (index + slideCount) % slideCount;
 
 const updateProductMediaSize = (image) => {
@@ -609,7 +629,8 @@ const getCurrentOrderSelection = (productCard, orderPanel) => {
     return {
         name: getProductName(productCard),
         price: getProductPrice(productCard),
-        size: orderData.get('size')
+        size: orderData.get('size'),
+        ...getProductImage(productCard)
     };
 };
 
@@ -793,6 +814,16 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
 
 const getCartItemCount = () => cartItems.reduce((total, item) => total + item.quantity, 0);
 
+const getCartSubtotal = () => cartItems.reduce((sum, item) => sum + (item.quantity * (item.price ?? unitPrice)), 0);
+
+const getShippingHandlingFee = (subtotal) => {
+    if (subtotal <= 0 || subtotal > freeShippingThreshold) {
+        return 0;
+    }
+
+    return shippingHandlingFee;
+};
+
 const getCartSummaryText = () => {
     const itemCount = getCartItemCount();
 
@@ -822,6 +853,22 @@ const updateCartTitle = () => {
     cartTitle.textContent = itemCount === 1 ? 'Your Item' : 'Your Items';
 };
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+})[character]);
+
+const createCartItemImage = (item) => {
+    if (!item.imageSrc) {
+        return '';
+    }
+
+    return `<img class="cart-item-image" src="${escapeHtml(item.imageSrc)}" alt="${escapeHtml(item.imageAlt || `${item.name} apparel image`)}" loading="lazy">`;
+};
+
 const renderCart = () => {
     if (!cartItemsContainer || !cartTotal) {
         return;
@@ -840,24 +887,44 @@ const renderCart = () => {
 
     if (cartItems.length === 0) {
         cartItemsContainer.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+        if (cartSubtotal) {
+            cartSubtotal.textContent = '$0.00';
+        }
+        if (cartShipping) {
+            cartShipping.textContent = '$0.00';
+        }
         cartTotal.textContent = '$0.00';
         return;
     }
 
     cartItemsContainer.innerHTML = cartItems.map((item, index) => `
         <div class="cart-item">
-            <div class="cart-item-title">
-                <span>${item.name}</span>
-                <div class="cart-item-actions">
-                    <span>${formatCurrency(item.quantity * (item.price ?? unitPrice))}</span>
-                    <button class="cart-remove small-action-button" type="button" data-index="${index}">Remove</button>
+            ${createCartItemImage(item)}
+            <div class="cart-item-copy">
+                <div class="cart-item-title">
+                    <span>${escapeHtml(item.name)}</span>
+                    <div class="cart-item-actions">
+                        <button class="cart-remove small-action-button" type="button" data-index="${index}">Remove</button>
+                        <span class="cart-item-price">${formatCurrency(item.quantity * (item.price ?? unitPrice))}</span>
+                    </div>
                 </div>
+                <p class="cart-item-details">Size ${escapeHtml(item.size)} / Qty ${item.quantity}</p>
             </div>
-            <p class="cart-item-details">Size ${item.size} / Qty ${item.quantity}</p>
         </div>
     `).join('');
 
-    const total = cartItems.reduce((sum, item) => sum + (item.quantity * (item.price ?? unitPrice)), 0);
+    const subtotal = getCartSubtotal();
+    const shippingFee = getShippingHandlingFee(subtotal);
+    const total = subtotal + shippingFee;
+
+    if (cartSubtotal) {
+        cartSubtotal.textContent = formatCurrency(subtotal);
+    }
+
+    if (cartShipping) {
+        cartShipping.textContent = shippingFee > 0 ? formatCurrency(shippingFee) : 'Free';
+    }
+
     cartTotal.textContent = formatCurrency(total);
 };
 

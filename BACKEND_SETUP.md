@@ -86,6 +86,15 @@ Invoke-RestMethod -Method Post -Uri "https://jesuscrosswear.ca/api/restock-inven
 
 Restocking increases `stock` only. It does not erase sold inventory or active reservations.
 
+To reset every product and size back to the configured maximum stock, use the same private token with `reset = $true`:
+
+```powershell
+$body = @{ reset = $true } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "https://jesuscrosswear.ca/api/restock-inventory" -Headers @{ Authorization = "Bearer $token" } -ContentType "application/json" -Body $body
+```
+
+The reset path sets Signature variants back to 10, Scripture variants back to 24, clears sold counts, and clears active reservations.
+
 ## Stripe Webhook Setup
 
 In Stripe, create a webhook endpoint for:

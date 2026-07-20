@@ -591,6 +591,40 @@ const restockInventory = async (restockItems) => {
   });
 };
 
+const resetInventoryToMaxStock = async () => {
+  return mutateInventory((inventory, now) => {
+    const before = getAvailabilitySnapshot(inventory, now);
+
+    inventory.variants = createInitialInventory().variants;
+    inventory.reservations = {};
+
+    const after = getAvailabilitySnapshot(inventory, now);
+
+    return {
+      updatedAt: new Date(now).toISOString(),
+      reset: true,
+      items: Object.entries(after).map(([variantKey, variant]) => ({
+        name: variant.product,
+        displayName: variant.displayName,
+        size: variant.size,
+        variantKey,
+        stock: {
+          before: before[variantKey]?.stock || 0,
+          after: variant.stock
+        },
+        sold: {
+          before: before[variantKey]?.sold || 0,
+          after: variant.sold
+        },
+        available: {
+          before: before[variantKey]?.available || 0,
+          after: variant.available
+        }
+      }))
+    };
+  });
+};
+
 const getInventoryStatus = async () => {
   const store = getInventoryStore();
   const entry = await readInventoryEntry(store);
@@ -627,6 +661,7 @@ module.exports = {
   normalizeOrderItems,
   products,
   releaseReservation,
+  resetInventoryToMaxStock,
   restockInventory,
   reserveInventory
 };

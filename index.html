@@ -538,9 +538,19 @@
             <div class="cart-items" aria-live="polite">
                 <p class="cart-empty">Your cart is empty.</p>
             </div>
-            <div class="cart-total-row">
-                <span>Total</span>
-                <strong class="cart-total">$0.00</strong>
+            <div class="cart-summary" aria-live="polite">
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <strong class="cart-subtotal">$0.00</strong>
+                </div>
+                <div class="cart-summary-row">
+                    <span class="cart-summary-label">Shipping &amp; Handling <span class="cart-shipping-inline-note">Free over $300</span></span>
+                    <strong class="cart-shipping">$0.00</strong>
+                </div>
+                <div class="cart-total-row">
+                    <span>Total</span>
+                    <strong class="cart-total">$0.00</strong>
+                </div>
             </div>
             <div class="cart-actions">
                 <button class="cart-clear" type="button">Clear Cart</button>

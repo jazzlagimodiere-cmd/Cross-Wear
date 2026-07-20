@@ -3,6 +3,7 @@ const {
   InventoryError,
   connectInventoryStore,
   products,
+  resetInventoryToMaxStock,
   restockInventory
 } = require('./inventory-store');
 
@@ -84,6 +85,8 @@ const expandRestockItems = (payload) => {
   });
 };
 
+const shouldResetInventory = (payload) => payload?.reset === true || String(payload?.action || '').trim().toLowerCase() === 'reset';
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
@@ -107,6 +110,15 @@ exports.handler = async (event) => {
 
   try {
     connectInventoryStore(event);
+
+    if (shouldResetInventory(payload)) {
+      const result = await resetInventoryToMaxStock();
+
+      return jsonResponse(200, {
+        restocked: true,
+        ...result
+      });
+    }
 
     const result = await restockInventory(expandRestockItems(payload));
 

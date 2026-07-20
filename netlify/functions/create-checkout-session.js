@@ -13,6 +13,8 @@ const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 const currency = process.env.STRIPE_CURRENCY || 'cad';
 const defaultSiteUrl = 'http://localhost:8888';
 const configuredSiteUrl = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+const shippingHandlingAmount = 1500;
+const freeShippingThresholdAmount = 30000;
 
 const isLocalSiteUrl = (url) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(url);
 
@@ -68,6 +70,32 @@ const buildLineItem = (item) => {
   };
 };
 
+const getOrderSubtotalAmount = (items) => {
+  return items.reduce((subtotal, item) => subtotal + (item.unitAmount * item.quantity), 0);
+};
+
+const getShippingHandlingAmount = (items) => {
+  const subtotal = getOrderSubtotalAmount(items);
+
+  if (subtotal <= 0 || subtotal > freeShippingThresholdAmount) {
+    return 0;
+  }
+
+  return shippingHandlingAmount;
+};
+
+const buildShippingHandlingLineItem = (amount) => ({
+  quantity: 1,
+  price_data: {
+    currency,
+    unit_amount: amount,
+    product_data: {
+      name: 'Shipping & Handling',
+      description: 'Free shipping over $300'
+    }
+  }
+});
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
@@ -111,6 +139,11 @@ exports.handler = async (event) => {
 
   const checkoutSiteUrl = resolveSiteUrl(event);
   const lineItems = orderItems.map(buildLineItem);
+  const shippingHandlingLineItem = getShippingHandlingAmount(orderItems);
+
+  if (shippingHandlingLineItem > 0) {
+    lineItems.push(buildShippingHandlingLineItem(shippingHandlingLineItem));
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
