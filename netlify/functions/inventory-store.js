@@ -538,10 +538,10 @@ const completeRecoveredOrder = async (orderItems, stripeSessionId) => {
 
 const releaseReservation = async (reservationId, reason = 'released') => {
   if (!reservationId) {
-    return;
+    return { released: false };
   }
 
-  await mutateInventory((inventory, now) => {
+  return mutateInventory((inventory, now) => {
     const reservation = inventory.reservations[reservationId];
 
     if (!reservation || reservation.status === 'completed') {
@@ -555,6 +555,8 @@ const releaseReservation = async (reservationId, reason = 'released') => {
     reservation.status = reason === 'expired' ? 'expired' : 'released';
     reservation.releasedAt = new Date(now).toISOString();
     reservation.releaseReason = reason;
+
+    return { released: true };
   });
 };
 

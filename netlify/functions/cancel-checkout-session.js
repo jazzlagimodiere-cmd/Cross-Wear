@@ -28,8 +28,8 @@ exports.handler = async (event) => {
   if (reservationId) {
     try {
       connectInventoryStore(event);
-      await releaseReservation(reservationId, 'checkout_canceled');
-      released = true;
+      const result = await releaseReservation(reservationId, 'checkout_canceled');
+      released = Boolean(result?.released);
     } catch (error) {
       console.error('Unable to release canceled checkout reservation:', error);
     }
