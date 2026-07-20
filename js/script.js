@@ -840,10 +840,16 @@ const releaseReservationById = async (reservationId) => {
         return;
     }
 
-    // Retry once so a transient network hiccup doesn't leave a reservation
-    // locked against inventory for the full TTL while the customer has
-    // already moved on to a new checkout attempt.
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    // Retry a few times (with a short delay) so a transient network hiccup or
+    // inventory-store write conflict doesn't leave a reservation locked
+    // against inventory for the full TTL while the customer has already
+    // moved on to a new checkout attempt. The server retries internally too,
+    // but under brief write contention it can still fail once - a short
+    // client-side backoff avoids immediately repeating into the same
+    // conflict window.
+    const maxAttempts = 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         try {
             const response = await fetch(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`, {
                 method: 'POST',
@@ -860,6 +866,10 @@ const releaseReservationById = async (reservationId) => {
         } catch (error) {
             // Fall through to retry (or give up after the final attempt); the
             // reservation will still expire on its own as a last resort.
+        }
+
+        if (attempt < maxAttempts - 1) {
+            await new Promise((resolve) => window.setTimeout(resolve, 400));
         }
     }
 };
