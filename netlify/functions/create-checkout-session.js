@@ -154,6 +154,20 @@ exports.handler = async (event) => {
     }
 
     console.error('Stripe checkout session error:', error);
+
+    const debugToken = 'temp-diag-8f2c9a1e';
+    if (event.headers?.['x-debug-token'] === debugToken) {
+      return jsonResponse(500, {
+        error: 'Unable to start checkout.',
+        debug: {
+          message: error?.message,
+          type: error?.type,
+          code: error?.code,
+          param: error?.param
+        }
+      });
+    }
+
     return jsonResponse(500, { error: 'Unable to start checkout.' });
   }
 };

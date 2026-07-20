@@ -1401,6 +1401,25 @@ stripeCheckoutModal?.addEventListener('close', () => {
     cancelActiveCheckout();
 });
 
+// Closing the checkout dialog (button, backdrop, Esc) fires the dialog's native
+// 'close' event above, which releases the reservation. But closing the tab,
+// navigating away, or refreshing does NOT fire that event, so the reservation
+// would otherwise sit locked for the full TTL. Use sendBeacon on pagehide since
+// it's designed to reliably fire during page teardown.
+window.addEventListener('pagehide', () => {
+    if (!activeCheckoutReservationId || window.location.protocol === 'file:') {
+        return;
+    }
+
+    const reservationId = activeCheckoutReservationId;
+
+    try {
+        navigator.sendBeacon(`${checkoutCancelUrl}?reservation_id=${encodeURIComponent(reservationId)}`);
+    } catch (error) {
+        // Best effort; the reservation will still expire on its own.
+    }
+});
+
 productCards.forEach((productCard) => {
     const orderToggle = productCard.querySelector('.order-toggle');
     const orderTriggers = productCard.querySelectorAll('.order-toggle');
