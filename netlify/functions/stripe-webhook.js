@@ -10,7 +10,7 @@ const {
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' }) : null;
 
 const jsonResponse = (statusCode, body) => ({
   statusCode,

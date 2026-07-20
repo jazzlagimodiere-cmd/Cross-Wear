@@ -8,7 +8,9 @@ const {
 } = require('./inventory-store');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+// embedded_page checkout requires this API version or newer; the account's
+// dashboard-configured default version may predate it.
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' }) : null;
 
 const currency = process.env.STRIPE_CURRENCY || 'cad';
 const shippingHandlingAmount = 1500;
@@ -154,20 +156,6 @@ exports.handler = async (event) => {
     }
 
     console.error('Stripe checkout session error:', error);
-
-    const debugToken = 'temp-diag-8f2c9a1e';
-    if (event.headers?.['x-debug-token'] === debugToken) {
-      return jsonResponse(500, {
-        error: 'Unable to start checkout.',
-        debug: {
-          message: error?.message,
-          type: error?.type,
-          code: error?.code,
-          param: error?.param
-        }
-      });
-    }
-
     return jsonResponse(500, { error: 'Unable to start checkout.' });
   }
 };

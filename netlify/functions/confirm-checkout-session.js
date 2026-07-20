@@ -5,7 +5,7 @@ const {
 } = require('./checkout-session-inventory');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' }) : null;
 
 const jsonResponse = (statusCode, body) => ({
   statusCode,
