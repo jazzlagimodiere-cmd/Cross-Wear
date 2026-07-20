@@ -78,7 +78,11 @@ const cartItems = [];
 const availabilityUpdaters = [];
 const productGalleries = new Map();
 const checkoutSessionUrl = '/api/create-checkout-session';
-const checkoutCancelUrl = '/api/cancel-checkout-session';
+// The /api/cancel-checkout-session rewrite in netlify.toml has proven
+// unreliable at forwarding the query string and POST body through to the
+// function (confirmed via repeated direct testing), which silently broke
+// reservation release. Calling the function directly sidesteps the redirect.
+const checkoutCancelUrl = '/.netlify/functions/cancel-checkout-session';
 const checkoutConfirmUrl = '/api/confirm-checkout-session';
 const stripeConfigUrl = '/api/stripe-config';
 const inventoryStatusUrl = '/api/inventory';
