@@ -212,56 +212,6 @@ const toggleSignaturePreviewExpanded = (button) => {
     }
 };
 
-const getImageUrl = (src) => {
-    const candidate = src?.split(',')[0]?.trim().split(/\s+/)[0];
-    return candidate ? new URL(candidate, document.baseURI).href : '';
-};
-
-const getSignatureImageGallery = (button) => {
-    const image = button.querySelector('img');
-
-    if (!image) {
-        return null;
-    }
-
-    const slides = [];
-    const addSlide = (src) => {
-        const imageUrl = getImageUrl(src);
-
-        if (imageUrl && !slides.some((slide) => slide.src === imageUrl)) {
-            slides.push({
-                src: imageUrl,
-                alt: image.alt || 'Product image'
-            });
-        }
-    };
-
-    addSlide(image.currentSrc || image.getAttribute('src'));
-
-    if (button.classList.contains('signature-hoodie-preview')) {
-        button.querySelectorAll('source[srcset]').forEach((source) => addSlide(source.getAttribute('srcset')));
-        addSlide(image.getAttribute('src'));
-    }
-
-    return {
-        slides,
-        productName: button.closest('[data-product-name]')?.dataset.productName || image.alt || 'Product Image',
-        getCurrentSlideIndex: () => 0,
-        setCurrentSlideIndex: () => {}
-    };
-};
-
-const openSignatureImageViewer = (button) => {
-    const gallery = getSignatureImageGallery(button);
-
-    if (!gallery?.slides?.length) {
-        return;
-    }
-
-    closeSignaturePreviews();
-    openImageViewer(gallery);
-};
-
 const keyboardHandledSignaturePreviewButtons = new WeakSet();
 
 signaturePreviewButtons.forEach((button) => {
@@ -348,9 +298,8 @@ signaturePreviewButtons.forEach((button) => {
         pointerHandledSignaturePreviewButtons.add(button);
         window.setTimeout(() => pointerHandledSignaturePreviewButtons.delete(button), 100);
 
-        if (shouldHandleTap && !interaction.hasMoved) {
+        if (shouldHandleTap && !interaction.hasMoved && interaction.wasExpanded) {
             setSignaturePreviewExpanded(button, false);
-            openSignatureImageViewer(button);
         }
 
         try {
@@ -369,7 +318,7 @@ signaturePreviewButtons.forEach((button) => {
 
         event.preventDefault();
         event.stopPropagation();
-        openSignatureImageViewer(button);
+        toggleSignaturePreviewExpanded(button);
     });
 
     button.addEventListener('click', (event) => {
@@ -388,7 +337,7 @@ signaturePreviewButtons.forEach((button) => {
         }
 
         event.preventDefault();
-        openSignatureImageViewer(button);
+        toggleSignaturePreviewExpanded(button);
     });
 });
 

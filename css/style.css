@@ -239,22 +239,50 @@ header {
     font-weight: 700;
     letter-spacing: 2px;
     line-height: 1.35;
-    overflow-x: auto;
-    padding: 9px 16px;
-    scrollbar-width: none;
+    overflow: hidden;
+    padding: 9px 0;
     text-align: center;
     text-transform: uppercase;
     white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
 }
 
-.announcement-bar::-webkit-scrollbar {
-    display: none;
+.announcement-bar-track {
+    display: inline-flex;
+    width: max-content;
+    animation: announcement-bar-scroll 16s linear infinite;
 }
 
 .announcement-bar-text {
     display: inline-block;
+    flex: 0 0 auto;
     white-space: nowrap;
+    padding-right: 48px;
+}
+
+@keyframes announcement-bar-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (min-width: 761px) {
+    .announcement-bar-track {
+        animation-duration: 24s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .announcement-bar-track {
+        animation: none;
+    }
+
+    .announcement-bar-text:nth-child(2) {
+        display: none;
+    }
 }
 
 main {
@@ -2588,6 +2616,7 @@ body.about-background .about-hero {
 .preorder-confirm-panel::before {
     content: "";
     position: absolute;
+    z-index: 0;
     top: 10px;
     left: 20px;
     right: 20px;
@@ -2603,6 +2632,8 @@ body.about-background .about-hero {
 .image-viewer-header,
 .cart-modal-header,
 .preorder-confirm-header {
+    position: relative;
+    z-index: 1;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255, 228, 154, 0.18);
 }
