@@ -249,7 +249,7 @@ header {
 .announcement-bar-track {
     display: inline-flex;
     width: max-content;
-    animation: announcement-bar-scroll 16s linear infinite;
+    animation: announcement-bar-scroll 28s linear infinite;
 }
 
 .announcement-bar-text {
@@ -271,7 +271,7 @@ header {
 
 @media (min-width: 761px) {
     .announcement-bar-track {
-        animation-duration: 24s;
+        animation-duration: 40s;
     }
 }
 
