@@ -12,7 +12,6 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 // dashboard-configured default version may predate it.
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2026-03-25.dahlia' }) : null;
 
-const currency = process.env.STRIPE_CURRENCY || 'cad';
 const shippingHandlingAmount = 1500;
 const freeShippingThresholdAmount = 30000;
 
@@ -24,7 +23,14 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body)
 });
 
-const buildLineItem = (item) => {
+const getCustomerCountry = (event, context) => {
+  const countryCode = context?.geo?.country?.code || event?.geo?.country?.code || '';
+  return String(countryCode).trim().toUpperCase() === 'CA' ? 'CA' : 'US';
+};
+
+const getCurrencyForCountry = (country) => country === 'CA' ? 'cad' : 'usd';
+
+const buildLineItem = (item, currency) => {
   return {
     quantity: item.quantity,
     price_data: {
@@ -56,7 +62,7 @@ const getShippingHandlingAmount = (items) => {
   return shippingHandlingAmount;
 };
 
-const buildShippingHandlingLineItem = (amount) => ({
+const buildShippingHandlingLineItem = (amount, currency) => ({
   quantity: 1,
   price_data: {
     currency,
@@ -68,7 +74,7 @@ const buildShippingHandlingLineItem = (amount) => ({
   }
 });
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
   }
@@ -109,11 +115,13 @@ exports.handler = async (event) => {
     return jsonResponse(500, { error: 'Unable to reserve preorder inventory.' });
   }
 
-  const lineItems = orderItems.map(buildLineItem);
+  const customerCountry = getCustomerCountry(event, context);
+  const currency = getCurrencyForCountry(customerCountry);
+  const lineItems = orderItems.map((item) => buildLineItem(item, currency));
   const shippingHandlingLineItem = getShippingHandlingAmount(orderItems);
 
   if (shippingHandlingLineItem > 0) {
-    lineItems.push(buildShippingHandlingLineItem(shippingHandlingLineItem));
+    lineItems.push(buildShippingHandlingLineItem(shippingHandlingLineItem, currency));
   }
 
   try {
@@ -122,6 +130,9 @@ exports.handler = async (event) => {
       redirect_on_completion: 'never',
       mode: 'payment',
       payment_method_types: ['card'],
+      adaptive_pricing: {
+        enabled: false
+      },
       client_reference_id: reservation.reservationId,
       line_items: lineItems,
       // Stripe requires expires_at to be at least 30 minutes in the future at the
@@ -133,14 +144,16 @@ exports.handler = async (event) => {
       ),
       billing_address_collection: 'required',
       shipping_address_collection: {
-        allowed_countries: ['CA']
+        allowed_countries: ['CA', 'US']
       },
       phone_number_collection: {
         enabled: true
       },
       metadata: {
         order_type: 'preorder',
-        reservation_id: reservation.reservationId
+        reservation_id: reservation.reservationId,
+        customer_country: customerCountry,
+        checkout_currency: currency
       }
     });
 

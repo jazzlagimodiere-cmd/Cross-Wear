@@ -2200,6 +2200,17 @@ body.about-background .about-hero {
     font-size: 15px;
 }
 
+.preorder-confirm-copy a {
+    color: var(--luxury-clean-gold);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.preorder-confirm-copy a:focus-visible {
+    outline: 2px solid var(--luxury-clean-gold);
+    outline-offset: 2px;
+}
+
 .preorder-confirm-summary {
     margin-top: 12px;
     color: #8f641c;

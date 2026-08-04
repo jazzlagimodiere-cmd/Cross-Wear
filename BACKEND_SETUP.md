@@ -21,7 +21,6 @@ STRIPE_SECRET_KEY=sk_test_your_real_test_secret_key
 STRIPE_PUBLISHABLE_KEY=pk_test_your_real_test_publishable_key
 STRIPE_WEBHOOK_SECRET=whsec_your_test_webhook_secret
 SITE_URL=http://localhost:8888
-STRIPE_CURRENCY=cad
 CHECKOUT_RESERVATION_SECONDS=1800
 RESTOCK_ADMIN_TOKEN=use_a_long_random_private_token_here
 ```
@@ -43,12 +42,13 @@ STRIPE_SECRET_KEY=sk_live_or_test_key_from_stripe
 STRIPE_PUBLISHABLE_KEY=pk_live_or_test_key_from_stripe
 STRIPE_WEBHOOK_SECRET=whsec_live_or_test_webhook_secret_from_stripe
 SITE_URL=https://jesuscrosswear.ca
-STRIPE_CURRENCY=cad
 CHECKOUT_RESERVATION_SECONDS=1800
 RESTOCK_ADMIN_TOKEN=use_a_long_random_private_token_here
 ```
 
 Do not commit `.env` or paste secret keys into chat.
+
+Checkout uses Netlify's server-side geo context to charge Canadian visitors in CAD and US visitors in USD. If geo data is unavailable, including during local development, checkout defaults to USD. Stripe Adaptive Pricing is disabled on each Checkout Session, so backend amounts are used as-is: for example, `6500` is 65.00 CAD or 65.00 USD rather than a converted amount.
 
 ## Inventory Protection
 
