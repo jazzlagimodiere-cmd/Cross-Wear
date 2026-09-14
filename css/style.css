@@ -2142,6 +2142,14 @@ body.about-background .about-hero {
     overflow: hidden;
 }
 
+@media (min-width: 768px) {
+    .image-viewer-header h2,
+    .image-viewer-close {
+        position: relative;
+        top: 7px;
+    }
+}
+
 .image-viewer-header {
     display: flex;
     align-items: center;
@@ -3106,6 +3114,21 @@ body.about-background .about-hero {
         letter-spacing: 0.05em;
         line-height: 1.15;
         white-space: nowrap;
+    }
+
+    #ezekiel-order-title,
+    #matthew-order-title {
+        font-size: clamp(20px, 5vw, 26px);
+        line-height: 1.1;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }
+
+    .order-close {
+        font-size: 9px;
+        min-width: 72px;
+        padding: 8px 12px;
+        letter-spacing: 0.16em;
     }
 
     .signature-spec-intro,
