@@ -34,7 +34,8 @@ if (searchForm) {
 }
 
 const productCards = document.querySelectorAll('.product-card, .signature-product-card[data-product-name]');
-const signaturePreviewButtons = document.querySelectorAll('.signature-product-media');
+const signaturePreviewButtons = document.querySelectorAll('.signature-product-media, .scripture-product-media');
+const productImageTriggers = document.querySelectorAll('.product-image-trigger:not(.scripture-product-media)');
 const cartButton = document.querySelector('.cart-button');
 const cartCount = document.querySelector('.cart-count');
 const cartModal = document.querySelector('#cart-modal');
@@ -584,7 +585,7 @@ document.querySelectorAll('.product-slider').forEach((slider) => {
     });
 });
 
-document.querySelectorAll('.product-image-trigger').forEach((trigger) => {
+productImageTriggers.forEach((trigger) => {
     trigger.addEventListener('click', (event) => {
         event.preventDefault();
         const slider = trigger.closest('.product-slider');

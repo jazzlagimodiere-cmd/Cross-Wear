@@ -1265,6 +1265,116 @@ body.about-background .about-hero {
     outline-offset: 8px;
 }
 
+.scripture-product-media {
+    --signature-preview-left: 50vw;
+    --signature-preview-top: 50vh;
+    --signature-preview-ratio: 1;
+    --signature-preview-scale: 1;
+    --signature-preview-pan-x: 0px;
+    --signature-preview-pan-y: 0px;
+    --signature-preview-width: min(87vh, calc(100vw - 30px));
+    --signature-preview-height: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: var(--signature-preview-ratio);
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 228, 154, 0.24);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: 0 0 22px rgba(255, 228, 154, 0.18), 0 18px 38px rgba(0, 0, 0, 0.38), inset 0 0 0 1px rgba(255, 228, 154, 0.08);
+    cursor: zoom-in;
+    overflow: hidden;
+    touch-action: manipulation;
+    padding: 0;
+    transition: border-color 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
+}
+
+.scripture-product-media::after {
+    position: fixed;
+    top: var(--signature-preview-top);
+    left: var(--signature-preview-left);
+    width: var(--signature-preview-width);
+    height: var(--signature-preview-height);
+    max-height: 95vh;
+    aspect-ratio: var(--signature-preview-ratio);
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.08);
+    background-image: var(--signature-preview-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    box-shadow: 0 36px 90px rgba(0, 0, 0, 0.78), 0 0 38px rgba(255, 228, 154, 0.24), inset 0 0 0 1px rgba(255, 228, 154, 0.18);
+    pointer-events: auto;
+    transform: translate(-50%, -50%) translate(var(--signature-preview-pan-x), var(--signature-preview-pan-y)) scale(var(--signature-preview-scale));
+    transform-origin: center;
+    z-index: 20000;
+}
+
+.scripture-product-media.is-enlarged {
+    border-color: rgba(255, 228, 154, 0.42);
+    box-shadow: 0 0 28px rgba(255, 228, 154, 0.26), 0 20px 42px rgba(0, 0, 0, 0.44), inset 0 0 0 1px rgba(255, 228, 154, 0.12);
+    cursor: zoom-out;
+    outline: none;
+    touch-action: none;
+}
+
+.scripture-product-media.is-enlarged::after {
+    content: "";
+}
+
+.scripture-ezekiel-preview {
+    --signature-preview-image: url("../images/Ezekiel 36.26.png");
+    --signature-preview-ratio: 0.99;
+    --signature-preview-width: min(94vh, calc(100vw - 30px));
+}
+
+.scripture-matthew-preview {
+    --signature-preview-image: url("../images/Matthew 11.28.png");
+    --signature-preview-ratio: 0.96;
+    --signature-preview-width: min(91vh, calc(100vw - 30px));
+}
+
+.scripture-john-preview {
+    --signature-preview-image: url("../images/John 14.30.png");
+    --signature-preview-ratio: 1.02;
+    --signature-preview-width: min(96vh, calc(100vw - 30px));
+}
+
+.scripture-luke-preview {
+    --signature-preview-image: url("../images/luke 17.21.jpg");
+    --signature-preview-ratio: 1;
+    --signature-preview-width: min(94vh, calc(100vw - 30px));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .scripture-product-media:hover,
+    .scripture-product-media:focus-visible {
+        cursor: zoom-out;
+        outline: none;
+    }
+
+    .scripture-product-media:hover::after,
+    .scripture-product-media:focus-visible::after {
+        content: "";
+    }
+}
+
+@media (max-width: 760px) {
+    .scripture-product-media {
+        --signature-preview-scale: 2;
+        width: 75%;
+        aspect-ratio: auto;
+        justify-self: center;
+        touch-action: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+    }
+}
+
 .product-details {
     display: grid;
     gap: 7px;
