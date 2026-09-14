@@ -1274,7 +1274,7 @@ body.about-background .about-hero {
         --signature-preview-left: 50vw;
         --signature-preview-top: 50vh;
         --signature-preview-ratio: 1;
-        --signature-preview-scale: 2;
+        --signature-preview-scale: 1.7;
         --signature-preview-pan-x: 0px;
         --signature-preview-pan-y: 0px;
         --signature-preview-width: min(87vh, calc(100vw - 30px));
