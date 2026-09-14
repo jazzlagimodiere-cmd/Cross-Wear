@@ -1291,7 +1291,7 @@ body.about-background .about-hero {
         background: rgba(0, 0, 0, 0.18);
         box-shadow: 0 0 22px rgba(255, 228, 154, 0.18), 0 18px 38px rgba(0, 0, 0, 0.38), inset 0 0 0 1px rgba(255, 228, 154, 0.08);
         cursor: zoom-in;
-        overflow: hidden;
+        overflow: visible;
         touch-action: none;
         user-select: none;
         -webkit-touch-callout: none;
@@ -1301,9 +1301,9 @@ body.about-background .about-hero {
     }
 
     .scripture-product-media::after {
-        position: absolute;
-        top: 50%;
-        left: 50%;
+        position: fixed;
+        top: var(--signature-preview-top);
+        left: var(--signature-preview-left);
         width: var(--signature-preview-width);
         height: var(--signature-preview-height);
         max-height: 95vh;
@@ -1322,6 +1322,8 @@ body.about-background .about-hero {
     }
 
     .scripture-product-media.is-enlarged {
+        z-index: 10;
+        overflow: visible;
         border-color: rgba(255, 228, 154, 0.42);
         box-shadow: 0 0 28px rgba(255, 228, 154, 0.26), 0 20px 42px rgba(0, 0, 0, 0.44), inset 0 0 0 1px rgba(255, 228, 154, 0.12);
         cursor: zoom-out;
@@ -1548,6 +1550,24 @@ body.about-background .about-hero {
     font-size: 30px;
     font-weight: 500;
     line-height: 1.05;
+}
+
+@media (min-width: 768px) {
+    .order-panel-header h2,
+    .klaviyo-signup-header h2,
+    .image-viewer-header h2,
+    .cart-modal-header h2,
+    .preorder-confirm-header h2,
+    .stripe-checkout-header h2,
+    .order-close,
+    .klaviyo-signup-close,
+    .image-viewer-close,
+    .cart-close,
+    .preorder-confirm-close,
+    .stripe-checkout-close {
+        position: relative;
+        top: 6px;
+    }
 }
 
 .order-description {
@@ -2127,10 +2147,13 @@ body.about-background .about-hero {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 8px 10px 0;
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid rgba(242, 215, 131, 0.25);
 }
 
 .image-viewer-header h2 {
+    position: relative;
+    top: 6px;
     margin: 0;
     color: var(--luxury-clean-gold);
     font-family: Georgia, 'Times New Roman', serif;
@@ -2138,8 +2161,15 @@ body.about-background .about-hero {
     font-weight: 500;
     line-height: 1;
     background: none;
+    text-align: left;
     -webkit-text-fill-color: currentColor;
     text-shadow: none;
+}
+
+.image-viewer-close {
+    position: relative;
+    top: 6px;
+    margin-left: auto;
 }
 
 .image-viewer-stage {
@@ -2734,7 +2764,7 @@ body.about-background .about-hero {
     content: "";
     position: absolute;
     z-index: 0;
-    top: 10px;
+    top: 18px;
     left: 20px;
     right: 20px;
     height: 2px;
@@ -3067,7 +3097,8 @@ body.about-background .about-hero {
     }
 
     .signature-product-card h3 {
-        font-size: 31px;
+        font-size: 28px;
+        letter-spacing: 0.9px;
     }
 
     .signature-spec-intro,
