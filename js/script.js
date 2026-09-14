@@ -34,8 +34,9 @@ if (searchForm) {
 }
 
 const productCards = document.querySelectorAll('.product-card, .signature-product-card[data-product-name]');
-const signaturePreviewButtons = document.querySelectorAll('.signature-product-media, .scripture-product-media');
-const productImageTriggers = document.querySelectorAll('.product-image-trigger:not(.scripture-product-media)');
+const useMobileScripturePreviews = window.matchMedia('(max-width: 760px)').matches || window.matchMedia('(hover: none)').matches;
+const signaturePreviewButtons = document.querySelectorAll(useMobileScripturePreviews ? '.signature-product-media, .scripture-product-media' : '.signature-product-media');
+const productImageTriggers = document.querySelectorAll(useMobileScripturePreviews ? '.product-image-trigger:not(.scripture-product-media)' : '.product-image-trigger');
 const cartButton = document.querySelector('.cart-button');
 const cartCount = document.querySelector('.cart-count');
 const cartModal = document.querySelector('#cart-modal');
