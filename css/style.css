@@ -3101,6 +3101,12 @@ body.about-background .about-hero {
         letter-spacing: 0.9px;
     }
 
+    .product-card h3 {
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        line-height: 1.15;
+    }
+
     .signature-spec-intro,
     .signature-spec-copy p {
         font-size: 16px;
