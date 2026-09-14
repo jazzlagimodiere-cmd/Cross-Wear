@@ -1301,9 +1301,9 @@ body.about-background .about-hero {
     }
 
     .scripture-product-media::after {
-        position: fixed;
-        top: var(--signature-preview-top);
-        left: var(--signature-preview-left);
+        position: absolute;
+        top: 50%;
+        left: 50%;
         width: var(--signature-preview-width);
         height: var(--signature-preview-height);
         max-height: 95vh;
