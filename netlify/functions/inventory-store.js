@@ -45,25 +45,25 @@ const products = {
   },
   'Ezekiel 36:26': {
     displayName: 'Ezekiel 36:26 Scripture Line',
-    unitAmount: 6500,
+    unitAmount: 8500,
     initialStock: scriptureInitialStock,
     allowedSizes: ['L', 'XL']
   },
   'Matthew 11:28': {
     displayName: 'Matthew 11:28 Scripture Line',
-    unitAmount: 6500,
+    unitAmount: 8500,
     initialStock: scriptureInitialStock,
     allowedSizes: ['L', 'XL']
   },
   'John 14:30': {
     displayName: 'John 14:30 Scripture Line',
-    unitAmount: 6500,
+    unitAmount: 8500,
     initialStock: scriptureInitialStock,
     allowedSizes: ['L', 'XL']
   },
   'Luke 17:21': {
     displayName: 'Luke 17:21 Scripture Line',
-    unitAmount: 6500,
+    unitAmount: 8500,
     initialStock: scriptureInitialStock,
     allowedSizes: ['L', 'XL']
   }
