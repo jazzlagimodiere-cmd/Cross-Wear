@@ -39,8 +39,18 @@ body::before {
         linear-gradient(180deg, rgba(255, 232, 166, 0.16) 0%, rgba(21, 22, 25, 0.22) 42%, rgba(9, 10, 12, 0.62) 100%),
         radial-gradient(ellipse at 50% 12%, rgba(255, 246, 202, 0.18), rgba(255, 246, 202, 0) 46%),
         linear-gradient(90deg, rgba(184, 135, 47, 0.12), rgba(255, 246, 202, 0.14) 48%, rgba(184, 135, 47, 0.1)),
-        url("../images/Goldbackground.png.jpg") center center / cover no-repeat;
+        url("../images/Goldbackground.webp") center center / cover no-repeat;
     opacity: 0.85;
+}
+
+@media (max-width: 760px) {
+    body::before {
+        background-image:
+            linear-gradient(180deg, rgba(255, 232, 166, 0.16) 0%, rgba(21, 22, 25, 0.22) 42%, rgba(9, 10, 12, 0.62) 100%),
+            radial-gradient(ellipse at 50% 12%, rgba(255, 246, 202, 0.18), rgba(255, 246, 202, 0) 46%),
+            linear-gradient(90deg, rgba(184, 135, 47, 0.12), rgba(255, 246, 202, 0.14) 48%, rgba(184, 135, 47, 0.1)),
+            url("../images/Goldbackground-mobile.webp");
+    }
 }
 
 body.about-background {
@@ -366,13 +376,13 @@ body.home-page .site-footer {
 
 .footer-brand-statement {
     max-width: 620px;
-    color: #f6ead0;
+    color: var(--luxury-clean-gold);
     font-size: clamp(12px, 1.1vw, 13px);
     line-height: 1.5;
 }
 
 .footer-copyright {
-    color: rgba(246, 234, 208, 0.72);
+    color: var(--luxury-clean-gold);
     font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
     font-size: 9.5px;
     font-weight: 600;
@@ -944,19 +954,19 @@ body.about-background .about-hero {
 }
 
 .signature-hoodie-preview {
-    --signature-preview-image: url("../images/Signature~Hoodie.png");
+    --signature-preview-image: url("../images/Signature~Hoodie.webp");
     --signature-preview-ratio: 1.0284;
     --signature-preview-width: min(97.7vh, calc(100vw - 30px));
 }
 
 .signature-jesus-preview {
-    --signature-preview-image: url("../images/Signature~Jesus.png");
+    --signature-preview-image: url("../images/Signature~Jesus.webp");
     --signature-preview-ratio: 0.9929;
     --signature-preview-width: min(94.3vh, calc(100vw - 30px));
 }
 
 .signature-saved-preview {
-    --signature-preview-image: url("../images/Signature~Saved.png");
+    --signature-preview-image: url("../images/Signature~Saved.webp");
     --signature-preview-ratio: 1.0181;
     --signature-preview-width: min(96.7vh, calc(100vw - 30px));
 }
@@ -1336,25 +1346,25 @@ body.about-background .about-hero {
     }
 
     .scripture-ezekiel-preview {
-        --signature-preview-image: url("../images/Ezekiel 36.26.png");
+        --signature-preview-image: url("../images/Ezekiel 36.26.webp");
         --signature-preview-ratio: 0.99;
         --signature-preview-width: min(94vh, calc(100vw - 30px));
     }
 
     .scripture-matthew-preview {
-        --signature-preview-image: url("../images/Matthew 11.28.png");
+        --signature-preview-image: url("../images/Matthew 11.28.webp");
         --signature-preview-ratio: 0.96;
         --signature-preview-width: min(91vh, calc(100vw - 30px));
     }
 
     .scripture-john-preview {
-        --signature-preview-image: url("../images/John 14.30.png");
+        --signature-preview-image: url("../images/John 14.30.webp");
         --signature-preview-ratio: 1.02;
         --signature-preview-width: min(96vh, calc(100vw - 30px));
     }
 
     .scripture-luke-preview {
-        --signature-preview-image: url("../images/luke 17.21.jpg");
+        --signature-preview-image: url("../images/luke 17.21.webp");
         --signature-preview-ratio: 1;
         --signature-preview-width: min(94vh, calc(100vw - 30px));
     }
