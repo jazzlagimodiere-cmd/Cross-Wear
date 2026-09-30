@@ -91,6 +91,7 @@ const inventoryStatusUrl = '/api/inventory';
 const cartStorageKey = 'crossWearCartItems';
 let activeImageGallery = null;
 let stripeClientPromise = null;
+let stripeScriptPromise = null;
 let activeEmbeddedCheckout = null;
 let activeCheckoutReservationId = '';
 let activeCheckoutSessionId = '';
@@ -713,15 +714,43 @@ const loadInventoryStatus = async () => {
     }
 };
 
+const loadStripeScript = () => {
+    if (typeof window.Stripe === 'function') {
+        return Promise.resolve();
+    }
+
+    if (!stripeScriptPromise) {
+        stripeScriptPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.async = true;
+            script.addEventListener('load', () => {
+                if (typeof window.Stripe === 'function') {
+                    resolve();
+                    return;
+                }
+
+                stripeScriptPromise = null;
+                reject(new Error('Secure checkout is almost ready. Please check back shortly.'));
+            }, { once: true });
+            script.addEventListener('error', () => {
+                stripeScriptPromise = null;
+                reject(new Error('Secure checkout is almost ready. Please check back shortly.'));
+            }, { once: true });
+            document.head.append(script);
+        });
+    }
+
+    return stripeScriptPromise;
+};
+
 const getStripeClient = async () => {
     if (stripeClientPromise) {
         return stripeClientPromise;
     }
 
     stripeClientPromise = (async () => {
-        if (typeof window.Stripe !== 'function') {
-            throw new Error('Secure checkout is almost ready. Please check back shortly.');
-        }
+        await loadStripeScript();
 
         const response = await fetch(stripeConfigUrl, {
             headers: {
