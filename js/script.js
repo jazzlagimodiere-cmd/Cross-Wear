@@ -61,7 +61,6 @@ const imageViewerModal = document.querySelector('#image-viewer-modal');
 const imageViewerTitle = document.querySelector('#image-viewer-title');
 const imageViewerImage = document.querySelector('.image-viewer-image');
 const imageViewerClose = document.querySelector('.image-viewer-close');
-const unitPrice = 65.00;
 const shippingHandlingFee = 15.00;
 const freeShippingThreshold = 300.00;
 const defaultSignatureVariantStock = 10;
@@ -395,7 +394,7 @@ const getVariantKey = ({ name, size }) => `${name}|${size}`;
 
 const getProductName = (productCard) => productCard.dataset.productName || productCard.querySelector('h1')?.textContent.trim() || 'Product';
 
-const getProductPrice = (productCard) => Number(productCard.dataset.unitPrice) || unitPrice;
+const getProductPrice = (productCard) => Number(productCard.dataset.unitPrice);
 
 const getProductCardByName = (name) => [...productCards].find((productCard) => getProductName(productCard) === name);
 
@@ -1017,7 +1016,7 @@ const createOrderAvailabilityUpdater = (productCard, orderPanel) => {
 
 const getCartItemCount = () => cartItems.reduce((total, item) => total + item.quantity, 0);
 
-const getCartSubtotal = () => cartItems.reduce((sum, item) => sum + (item.quantity * (item.price ?? unitPrice)), 0);
+const getCartSubtotal = () => cartItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
 const getShippingHandlingFee = (subtotal) => {
     if (subtotal <= 0 || subtotal > freeShippingThreshold) {
@@ -1108,7 +1107,7 @@ const renderCart = () => {
                     <span>${escapeHtml(item.name)}</span>
                     <div class="cart-item-actions">
                         <button class="cart-remove small-action-button" type="button" data-index="${index}">Remove</button>
-                        <span class="cart-item-price">${formatCurrency(item.quantity * (item.price ?? unitPrice))}</span>
+                        <span class="cart-item-price">${formatCurrency(item.quantity * item.price)}</span>
                     </div>
                 </div>
                 <p class="cart-item-details">Size ${escapeHtml(item.size)} / Qty ${item.quantity}</p>

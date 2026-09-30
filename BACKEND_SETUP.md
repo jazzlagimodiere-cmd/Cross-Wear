@@ -48,7 +48,7 @@ RESTOCK_ADMIN_TOKEN=use_a_long_random_private_token_here
 
 Do not commit `.env` or paste secret keys into chat.
 
-Checkout uses Netlify's server-side geo context to charge Canadian visitors in CAD and US visitors in USD. If geo data is unavailable, including during local development, checkout defaults to USD. Stripe Adaptive Pricing is disabled on each Checkout Session, so backend amounts are used as-is: for example, `6500` is 65.00 CAD or 65.00 USD rather than a converted amount.
+Checkout uses Netlify's server-side geo context to charge Canadian visitors in CAD and US visitors in USD. If geo data is unavailable, including during local development, checkout defaults to USD. Stripe Adaptive Pricing is disabled on each Checkout Session, so backend amounts are used as-is: for example, `8500` is 85.00 CAD or 85.00 USD rather than a converted amount.
 
 ## Inventory Protection
 
