@@ -1567,13 +1567,11 @@ body.about-background .about-hero {
     .klaviyo-signup-header h2,
     .image-viewer-header h2,
     .cart-modal-header h2,
-    .preorder-confirm-header h2,
     .stripe-checkout-header h2,
     .order-close,
     .klaviyo-signup-close,
     .image-viewer-close,
     .cart-close,
-    .preorder-confirm-close,
     .stripe-checkout-close {
         position: relative;
         top: 6px;
@@ -2258,8 +2256,7 @@ body.about-background .about-hero {
     transition: color 0.4s var(--luxury-hover-in-ease), transform 0.4s var(--luxury-hover-in-ease);
 }
 
-.cart-modal,
-.preorder-confirm-modal {
+.cart-modal {
     border: 0;
     padding: 0;
     background: transparent;
@@ -2269,18 +2266,12 @@ body.about-background .about-hero {
     width: min(760px, calc(100vw - 28px));
 }
 
-.preorder-confirm-modal {
-    width: min(520px, calc(100vw - 28px));
-}
-
-.cart-modal::backdrop,
-.preorder-confirm-modal::backdrop {
+.cart-modal::backdrop {
     background: rgba(32, 24, 12, 0.34);
     backdrop-filter: blur(3px);
 }
 
-.cart-modal-panel,
-.preorder-confirm-panel {
+.cart-modal-panel {
     border: 1px solid rgba(143, 100, 28, 0.34);
     border-radius: 8px;
     background:
@@ -2295,8 +2286,7 @@ body.about-background .about-hero {
     padding: 26px;
 }
 
-.cart-modal-header,
-.preorder-confirm-header {
+.cart-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2304,8 +2294,7 @@ body.about-background .about-hero {
     margin-bottom: 18px;
 }
 
-.cart-modal-header h2,
-.preorder-confirm-header h2 {
+.cart-modal-header h2 {
     margin: 0;
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 36px;
@@ -2313,7 +2302,6 @@ body.about-background .about-hero {
 }
 
 .cart-close,
-.preorder-confirm-close,
 .stripe-checkout-close {
     border: none;
     border-radius: var(--luxury-button-radius);
@@ -2333,49 +2321,10 @@ body.about-background .about-hero {
 
 .cart-close:hover,
 .cart-close:focus-visible,
-.preorder-confirm-close:hover,
-.preorder-confirm-close:focus-visible,
 .stripe-checkout-close:hover,
 .stripe-checkout-close:focus-visible {
     outline: none;
     transform: translateY(-1px);
-}
-
-.preorder-confirm-copy,
-.preorder-confirm-summary {
-    margin: 0;
-    color: #4d402a;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.preorder-confirm-copy {
-    color: #21180c;
-    font-size: 15px;
-}
-
-.preorder-confirm-copy a {
-    color: var(--luxury-clean-gold);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.preorder-confirm-copy a:focus-visible {
-    outline: 2px solid var(--luxury-clean-gold);
-    outline-offset: 2px;
-}
-
-.preorder-confirm-summary {
-    margin-top: 12px;
-    color: #8f641c;
-    font-weight: 700;
-}
-
-.preorder-confirm-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 18px;
 }
 
 .stripe-checkout-modal {
@@ -2420,14 +2369,6 @@ body.about-background .about-hero {
 
 .stripe-checkout-mount {
     min-height: 480px;
-}
-
-.preorder-confirm-back,
-.preorder-confirm-continue {
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    font-family: "Montserrat", "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 .cart-items {
@@ -2622,9 +2563,6 @@ body.about-background .about-hero {
 .order-toggle,
 .order-submit,
 .order-close,
-.preorder-confirm-close,
-.preorder-confirm-back,
-.preorder-confirm-continue,
 .mailing-list-trigger,
 .klaviyo-signup-submit,
 .thank-you-action,
@@ -2657,12 +2595,6 @@ body.about-background .about-hero {
 .order-submit:focus-visible,
 .order-close:hover,
 .order-close:focus-visible,
-.preorder-confirm-close:hover,
-.preorder-confirm-close:focus-visible,
-.preorder-confirm-back:hover,
-.preorder-confirm-back:focus-visible,
-.preorder-confirm-continue:hover,
-.preorder-confirm-continue:focus-visible,
 .mailing-list-trigger:hover,
 .mailing-list-trigger:focus-visible,
 .klaviyo-signup-submit:hover,
@@ -2693,9 +2625,6 @@ body.about-background .about-hero {
 
 .order-submit,
 .order-close,
-.preorder-confirm-close,
-.preorder-confirm-back,
-.preorder-confirm-continue,
 .mailing-list-trigger,
 .klaviyo-signup-submit,
 .thank-you-action,
@@ -2734,8 +2663,7 @@ body.about-background .about-hero {
 }
 
 .cart-checkout:disabled,
-.cart-clear:disabled,
-.preorder-confirm-continue:disabled {
+.cart-clear:disabled {
     cursor: not-allowed;
     filter: grayscale(0.35);
     opacity: 0.55;
@@ -2752,8 +2680,7 @@ body.about-background .about-hero {
 .order-modal::backdrop,
 .klaviyo-signup-modal::backdrop,
 .image-viewer-modal::backdrop,
-.cart-modal::backdrop,
-.preorder-confirm-modal::backdrop {
+.cart-modal::backdrop {
     background: rgba(9, 8, 6, 0.48);
     backdrop-filter: blur(6px);
 }
@@ -2761,8 +2688,7 @@ body.about-background .about-hero {
 .order-panel,
 .klaviyo-signup-panel,
 .image-viewer-panel,
-.cart-modal-panel,
-.preorder-confirm-panel {
+.cart-modal-panel {
     position: relative;
     border: 1px solid rgba(255, 228, 154, 0.42);
     border-radius: 8px;
@@ -2777,8 +2703,7 @@ body.about-background .about-hero {
 .order-panel::before,
 .klaviyo-signup-panel::before,
 .image-viewer-panel::before,
-.cart-modal-panel::before,
-.preorder-confirm-panel::before {
+.cart-modal-panel::before {
     content: "";
     position: absolute;
     z-index: 0;
@@ -2795,8 +2720,7 @@ body.about-background .about-hero {
 .order-panel-header,
 .klaviyo-signup-header,
 .image-viewer-header,
-.cart-modal-header,
-.preorder-confirm-header {
+.cart-modal-header {
     position: relative;
     z-index: 1;
     padding-bottom: 12px;
@@ -2807,7 +2731,6 @@ body.about-background .about-hero {
 .klaviyo-signup-header h2,
 .image-viewer-header h2,
 .cart-modal-header h2,
-.preorder-confirm-header h2,
 .klaviyo-success-notice h3 {
     color: var(--luxury-clean-gold);
     -webkit-text-fill-color: var(--luxury-clean-gold);
@@ -2817,7 +2740,6 @@ body.about-background .about-hero {
 .klaviyo-signup-copy,
 .klaviyo-signup-message,
 .klaviyo-success-notice p,
-.preorder-confirm-copy,
 .cart-empty,
 .cart-item-details,
 .cart-modal-note {
@@ -2825,8 +2747,7 @@ body.about-background .about-hero {
 }
 
 .stock-note,
-.order-message,
-.preorder-confirm-summary {
+.order-message {
     color: var(--luxury-clean-gold);
 }
 

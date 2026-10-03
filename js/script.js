@@ -49,11 +49,6 @@ const cartTotal = document.querySelector('.cart-total');
 const cartCheckout = document.querySelector('.cart-checkout');
 const cartClear = document.querySelector('.cart-clear');
 const cartModalNote = document.querySelector('.cart-modal-note');
-const preorderConfirmModal = document.querySelector('#preorder-confirm-modal');
-const preorderConfirmClose = document.querySelector('.preorder-confirm-close');
-const preorderConfirmBack = document.querySelector('.preorder-confirm-back');
-const preorderConfirmContinue = document.querySelector('.preorder-confirm-continue');
-const preorderConfirmSummary = document.querySelector('.preorder-confirm-summary');
 const stripeCheckoutModal = document.querySelector('#stripe-checkout-modal');
 const stripeCheckoutClose = document.querySelector('.stripe-checkout-close');
 const stripeCheckoutMount = document.querySelector('#stripe-checkout-mount');
@@ -1211,18 +1206,6 @@ if (cartClear) {
     });
 }
 
-const closePreorderConfirmModal = ({ reopenCart = false } = {}) => {
-    if (preorderConfirmModal?.open && typeof preorderConfirmModal.close === 'function') {
-        preorderConfirmModal.close();
-    } else {
-        preorderConfirmModal?.removeAttribute('open');
-    }
-
-    if (reopenCart) {
-        window.setTimeout(() => openCartModal(getCartSummaryText()), 0);
-    }
-};
-
 const getOrderValidationBubble = (orderPanel) => {
     let bubble = orderPanel.querySelector('.order-validation-bubble');
 
@@ -1261,7 +1244,7 @@ const showOrderValidationBubble = (orderPanel, message) => {
     }, 2100);
 };
 
-const openPreorderConfirmModal = () => {
+const startStripeCheckout = async () => {
     if (!cartItems.length) {
         if (cartModalNote) {
             cartModalNote.textContent = 'Your cart is empty.';
@@ -1269,46 +1252,17 @@ const openPreorderConfirmModal = () => {
         return;
     }
 
-    if (!preorderConfirmModal) {
-        return;
+    if (cartCheckout) {
+        cartCheckout.disabled = true;
     }
 
-    if (preorderConfirmSummary) {
-        preorderConfirmSummary.textContent = getCartSummaryText();
-    }
-
-    if (preorderConfirmContinue) {
-        preorderConfirmContinue.disabled = false;
-    }
-
-    if (cartModal?.open && typeof cartModal.close === 'function') {
-        cartModal.close();
-    } else {
-        cartModal?.removeAttribute('open');
-    }
-
-    if (typeof preorderConfirmModal.showModal === 'function' && !preorderConfirmModal.open) {
-        preorderConfirmModal.showModal();
-    } else {
-        preorderConfirmModal.setAttribute('open', '');
-    }
-
-    preorderConfirmContinue?.focus();
-};
-
-const startStripeCheckout = async () => {
-    if (!cartItems.length) {
-        closePreorderConfirmModal({ reopenCart: true });
-        return;
-    }
-
-    if (preorderConfirmContinue) {
-        preorderConfirmContinue.disabled = true;
+    if (cartModalNote) {
+        cartModalNote.textContent = 'Starting secure checkout...';
     }
 
     if (window.location.protocol === 'file:') {
-        if (preorderConfirmContinue) {
-            preorderConfirmContinue.disabled = false;
+        if (cartCheckout) {
+            cartCheckout.disabled = false;
         }
 
         return;
@@ -1354,24 +1308,29 @@ const startStripeCheckout = async () => {
             onComplete: handleEmbeddedCheckoutComplete
         });
 
-        closePreorderConfirmModal();
+        if (cartModal?.open && typeof cartModal.close === 'function') {
+            cartModal.close();
+        } else {
+            cartModal?.removeAttribute('open');
+        }
+
         openStripeCheckoutModal();
         activeEmbeddedCheckout.mount('#stripe-checkout-mount');
 
-        if (preorderConfirmContinue) {
-            preorderConfirmContinue.disabled = false;
+        if (cartCheckout) {
+            cartCheckout.disabled = false;
         }
     } catch (error) {
         destroyActiveEmbeddedCheckout();
         activeCheckoutReservationId = '';
         activeCheckoutSessionId = '';
 
-        if (preorderConfirmContinue) {
-            preorderConfirmContinue.disabled = false;
+        if (cartCheckout) {
+            cartCheckout.disabled = false;
         }
 
-        if (preorderConfirmSummary) {
-            preorderConfirmSummary.textContent = error.message || 'Unable to start checkout. Please try again.';
+        if (cartModalNote) {
+            cartModalNote.textContent = error.message || 'Unable to start checkout. Please try again.';
         }
 
         await loadInventoryStatus();
@@ -1406,16 +1365,7 @@ const handleEmbeddedCheckoutComplete = async () => {
     window.location.href = '/thank-you?order=confirmed';
 };
 
-cartCheckout?.addEventListener('click', openPreorderConfirmModal);
-preorderConfirmContinue?.addEventListener('click', startStripeCheckout);
-preorderConfirmClose?.addEventListener('click', () => closePreorderConfirmModal({ reopenCart: true }));
-preorderConfirmBack?.addEventListener('click', () => closePreorderConfirmModal({ reopenCart: true }));
-
-preorderConfirmModal?.addEventListener('click', (event) => {
-    if (event.target === preorderConfirmModal) {
-        closePreorderConfirmModal({ reopenCart: true });
-    }
-});
+cartCheckout?.addEventListener('click', startStripeCheckout);
 
 stripeCheckoutClose?.addEventListener('click', closeStripeCheckoutModal);
 
